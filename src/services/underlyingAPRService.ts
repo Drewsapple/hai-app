@@ -1,11 +1,6 @@
 import { BigNumber } from 'ethers'
-import { RewardsModel } from '~/model/rewardsModel'
-import { client } from '~/utils/graphql/client'
-import { gql } from '@apollo/client'
-import { findBlockNumberByTimestamp, fetchHaiVeloTotalsAtBlock } from '~/services/haivelo/dataSources'
 import { VITE_MAINNET_PUBLIC_RPC } from '~/utils'
 import {
-    HAI_VELO_ADDRESSES,
     HAIVELO_V1_DEPOSITER_ADDRESS,
     HAI_REWARD_DISTRIBUTOR_ADDRESS,
  fetchHaiVeloLatestTransferAmount } from '~/services/haiVeloService'

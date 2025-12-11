@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { gql, useQuery as useApolloQuery } from '@apollo/client'
 import type { Address } from '~/services/stakingService'
 

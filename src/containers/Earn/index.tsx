@@ -1,5 +1,4 @@
 import { useEarnStrategies, useMediaQuery } from '~/hooks'
-import { useEffect, useMemo } from 'react'
 
 import { NavContainer } from '~/components/NavContainer'
 import { StrategyTable } from './StrategyTable'

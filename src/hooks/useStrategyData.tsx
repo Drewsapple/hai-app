@@ -10,8 +10,7 @@ import { useHaiVeloCollateralMapping } from './haivelo/useHaiVeloCollateralMappi
 import { useHaiVeloBoostMap } from './haivelo/useHaiVeloBoostMap'
 
 // centralized in haiVeloService
-import { calculateHaiVeloBoost, calculateLPBoost } from '~/services/boostService'
-import { RewardsModel } from '~/model/rewardsModel'
+import { calculateLPBoost } from '~/services/boostService'
 
 // HAI-BOLD LP staking imports
 import { haiBoldCurveLpConfig } from '~/staking/configs/haiBoldCurveLp'

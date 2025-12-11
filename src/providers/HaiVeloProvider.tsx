@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode, useCallback } from 'react'
+import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import { useAccount } from 'wagmi'
 import { useBalance } from '~/hooks/useBalance'
 import { formatNumberWithStyle } from '~/utils'

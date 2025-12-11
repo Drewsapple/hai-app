@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { formatNumberWithStyle , sanitizeDecimals } from '~/utils'
+import { formatNumberWithStyle , sanitizeDecimals , Status } from '~/utils'
 import styled from 'styled-components'
 import { CenteredFlex, Flex, HaiButton, Text } from '~/styles'
 import { StatusLabel } from '~/components/StatusLabel'
-import { Status } from '~/utils'
 import { NumberInput } from '~/components/NumberInput'
 import { SelectInput, type SelectOption } from '~/components/SelectInput'
 import { MultiSelectInput, type MultiSelectOption } from '~/components/MultiSelectInput'

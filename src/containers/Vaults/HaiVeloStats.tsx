@@ -10,7 +10,6 @@ import { formatNumberWithStyle } from '~/utils'
 import { RewardsTokenArray } from '~/components/TokenArray'
 import { Stats, type StatProps } from '~/components/Stats'
 import { HaiButton } from '~/styles'
-import { ComingSoon } from '~/components/ComingSoon'
 
 export function HaiVeloStats() {
     const { graphSummary, graphData, data: analytics } = useAnalytics()

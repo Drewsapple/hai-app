@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useStoreState } from '~/store'
 // import { useVault } from '~/providers/VaultProvider'
 import { useVelodromePrices } from '~/providers/VelodromePriceProvider'
@@ -18,7 +18,6 @@ import { useHaiVeloCollateralMapping } from './haivelo/useHaiVeloCollateralMappi
 import { useAnalytics } from '~/providers/AnalyticsProvider'
 import { useQuery } from '@apollo/client'
 import { ALL_COLLATERAL_TYPES_QUERY } from '~/utils/graphql/queries'
-import { useBalance } from '~/hooks/useBalance'
 import { useMinterVaults } from '~/hooks/useMinterVaults'
 import { REWARDS } from '~/utils/rewards'
 import {

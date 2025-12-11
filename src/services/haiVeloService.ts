@@ -19,12 +19,7 @@
  */
 
 import type {
-    HaiVeloVersion,
     HaiVeloAddresses,
-    HaiVeloBalances,
-    HaiVeloTotals,
-    HaiVeloBoost,
-    HaiVeloAPR,
 } from '~/types/haivelo'
 
 // Token and contract addresses used across the app

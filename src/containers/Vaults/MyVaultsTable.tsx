@@ -10,8 +10,6 @@ import { StatusLabel } from '~/components/StatusLabel'
 import { Table } from '~/components/Table'
 import { ClaimableFreeCollateral } from './ClaimableFreeCollateral'
 import { useBoost } from '~/hooks/useBoost'
-import { RewardsModel } from '~/model/rewardsModel'
-import { useUnderlyingAPR } from '~/hooks/useUnderlyingAPR'
 
 type MyVaultsTableProps = {
     headers: SortableHeader[]
