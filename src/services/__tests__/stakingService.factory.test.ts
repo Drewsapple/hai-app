@@ -1,8 +1,9 @@
+import { vi } from 'vitest'
 import { buildStakingService } from '~/services/stakingService'
 
 // Mock ethers.Contract to capture constructor args and expose minimal API
-jest.mock('ethers', () => {
-    const actual = jest.requireActual('ethers')
+vi.mock('ethers', async () => {
+    const actual = await vi.importActual<Awaited<typeof import('ethers')>>('ethers')
     class MockContract {
         public __address: string
         public __abi: any
@@ -27,21 +28,11 @@ jest.mock('ethers', () => {
         }
         callStatic = { earned: async (_: string) => [] as any }
         populateTransaction = {
-            async stake(_user: string, _amount: any) {
-                return { to: this.__address }
-            },
-            async initiateWithdrawal(_amount: any) {
-                return { to: this.__address }
-            },
-            async withdraw() {
-                return { to: this.__address }
-            },
-            async cancelWithdrawal() {
-                return { to: this.__address }
-            },
-            async getReward(_user: string) {
-                return { to: this.__address }
-            },
+            stake: async (_user: string, _amount: any) => ({ to: this.__address }),
+            initiateWithdrawal: async (_amount: any) => ({ to: this.__address }),
+            withdraw: async () => ({ to: this.__address }),
+            cancelWithdrawal: async () => ({ to: this.__address }),
+            getReward: async (_user: string) => ({ to: this.__address }),
         }
     }
     return { ...actual, Contract: MockContract }

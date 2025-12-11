@@ -1,15 +1,15 @@
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import React from 'react'
 import { render, waitFor } from '@testing-library/react'
+import { vi } from 'vitest'
 import { useStakePendingWithdrawal } from '~/hooks/staking/useStakePendingWithdrawal'
 
-jest.mock('@apollo/client', () => {
+vi.mock('@apollo/client', () => {
     return {
         gql: (lits: TemplateStringsArray) => lits[0],
         useQuery: () => ({
             data: {
                 stakingUser: {
-                    pendingWithdrawal: { amount: '5.0', timestamp: 1000 },
+                    pendingWithdrawal: { amount: '5'.padEnd(19, '0'), timestamp: 1000 },
                 },
             },
         }),
