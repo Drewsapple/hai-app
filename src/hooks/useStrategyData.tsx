@@ -27,7 +27,6 @@ const HAI_TOKEN_ADDRESS = import.meta.env.VITE_HAI_ADDRESS as string
 const KITE_TOKEN_ADDRESS = import.meta.env.VITE_KITE_ADDRESS as string
 const OP_TOKEN_ADDRESS = import.meta.env.VITE_OP_ADDRESS as string
 
-
 export function useStrategyData(
     systemStateData: any,
     userPositionsList: any,
@@ -61,8 +60,10 @@ export function useStrategyData(
 
     // === HAI VELO Deposit Strategy (combined v1 + v2) ===
     const haiVeloV1Data = systemStateData?.collateralTypes.find((collateral: any) => collateral.id === 'HAIVELO')
-    const haiVeloV2Data = systemStateData?.collateralTypes.find((collateral: any) => collateral.id === 'HAIVELOV2' || collateral.id === 'HAIVELO_V2')
-    const haiVeloPrice = (haiVeloV2Data?.currentPrice?.value) ?? (haiVeloV1Data?.currentPrice?.value)
+    const haiVeloV2Data = systemStateData?.collateralTypes.find(
+        (collateral: any) => collateral.id === 'HAIVELOV2' || collateral.id === 'HAIVELO_V2'
+    )
+    const haiVeloPrice = haiVeloV2Data?.currentPrice?.value ?? haiVeloV1Data?.currentPrice?.value
     const { mapping: haiVeloCollateralMapping } = useHaiVeloCollateralMapping()
 
     const combinedHaiVeloQtyTotal = useMemo(
@@ -115,9 +116,10 @@ export function useStrategyData(
             // Recompute base APR using last-epoch TVL to mirror underlying APR
             try {
                 const totals = await getLastEpochHaiVeloTotals(VITE_MAINNET_PUBLIC_RPC)
-                if (totals && (Number(haiVeloPrice || 0) > 0)) {
+                if (totals && Number(haiVeloPrice || 0) > 0) {
                     const lastEpochTvlUsd = (totals.v1Total + totals.v2Total) * Number(haiVeloPrice || 0)
-                    const baseAprPercent = lastEpochTvlUsd > 0 ? (apr.haiVeloDailyRewardValue / lastEpochTvlUsd) * 365 * 100 : 0
+                    const baseAprPercent =
+                        lastEpochTvlUsd > 0 ? (apr.haiVeloDailyRewardValue / lastEpochTvlUsd) * 365 * 100 : 0
                     const updated = {
                         ...apr,
                         baseAPR: baseAprPercent,
@@ -126,7 +128,9 @@ export function useStrategyData(
                     setHaiVeloBoostApr(updated)
                     return
                 }
-            } catch {}
+            } catch {
+                /* intentionally empty catch block */
+            }
 
             setHaiVeloBoostApr(apr)
         })()
@@ -142,11 +146,12 @@ export function useStrategyData(
 
     // === HAI-BOLD LP Staking Strategy ===
     const haiBoldLpService = useMemo(
-        () => buildStakingService(
-            haiBoldCurveLpConfig.addresses.manager as `0x${string}`,
-            undefined,
-            haiBoldCurveLpConfig.decimals
-        ),
+        () =>
+            buildStakingService(
+                haiBoldCurveLpConfig.addresses.manager as `0x${string}`,
+                undefined,
+                haiBoldCurveLpConfig.decimals
+            ),
         []
     )
 
@@ -155,12 +160,13 @@ export function useStrategyData(
         haiBoldCurveLpConfig.namespace,
         haiBoldLpService
     )
-    const { data: haiBoldLpStats } = useStakeStats(
-        haiBoldCurveLpConfig.namespace,
-        haiBoldLpService
-    )
+    const { data: haiBoldLpStats } = useStakeStats(haiBoldCurveLpConfig.namespace, haiBoldLpService)
     const haiBoldLpAprData = useLpStakingApr(haiBoldCurveLpConfig)
-    const { tvlUsd: haiBoldLpPoolTvlUsd, lpPriceUsd: haiBoldLpPriceUsd, loading: haiBoldLpTvlLoading } = useLpTvl(haiBoldCurveLpConfig)
+    const {
+        tvlUsd: haiBoldLpPoolTvlUsd,
+        lpPriceUsd: haiBoldLpPriceUsd,
+        loading: haiBoldLpTvlLoading,
+    } = useLpTvl(haiBoldCurveLpConfig)
 
     // Calculate user's LP staked value in USD
     const haiBoldLpUserStaked = Number(haiBoldLpAccount?.stakedBalance || 0)
@@ -190,11 +196,11 @@ export function useStrategyData(
         const incentivesApr = haiBoldLpAprData.incentivesApr * 100 // Convert to percentage
         const baseApr = haiBoldLpAprData.netApr * 100 // Total base APR
         const myBoost = haiBoldLpBoostResult.lpBoost ?? 1
-        
+
         // Only apply boost to KITE incentives, not underlying APY
         const boostedIncentivesApr = incentivesApr * myBoost
         const myBoostedAPR = underlyingApr + boostedIncentivesApr
-        
+
         return {
             baseAPR: baseApr,
             myBoost,

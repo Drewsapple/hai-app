@@ -127,7 +127,9 @@ export function useStakeMutations(address?: Address, namespace: string = 'kite',
             })
             try {
                 await apolloClient.refetchQueries({ include: ['GetStakingUser', 'GetAllStakingUsers'] })
-            } catch {}
+            } catch {
+                /* intentionally empty catch block */
+            }
             await handleCommonSuccess()
         },
         onSettled: handleCommonSettled,
@@ -175,7 +177,9 @@ export function useStakeMutations(address?: Address, namespace: string = 'kite',
             })
             try {
                 await apolloClient.refetchQueries({ include: ['GetStakingUser', 'GetAllStakingUsers'] })
-            } catch {}
+            } catch {
+                /* intentionally empty catch block */
+            }
             await handleCommonSuccess()
         },
         onSettled: handleCommonSettled,
@@ -216,7 +220,9 @@ export function useStakeMutations(address?: Address, namespace: string = 'kite',
             })
             try {
                 await apolloClient.refetchQueries({ include: ['GetStakingUser', 'GetAllStakingUsers'] })
-            } catch {}
+            } catch {
+                /* intentionally empty catch block */
+            }
             await handleCommonSuccess()
         },
         onSettled: handleCommonSettled,
@@ -257,7 +263,9 @@ export function useStakeMutations(address?: Address, namespace: string = 'kite',
             })
             try {
                 await apolloClient.refetchQueries({ include: ['GetStakingUser', 'GetAllStakingUsers'] })
-            } catch {}
+            } catch {
+                /* intentionally empty catch block */
+            }
             await handleCommonSuccess()
         },
         onSettled: handleCommonSettled,
@@ -292,13 +300,8 @@ export function useStakeMutations(address?: Address, namespace: string = 'kite',
         onSettled: handleCommonSettled,
     })
 
-    return useMemo(() => ({ stake, initiateWithdrawal, withdraw, cancelWithdrawal, claimRewards }), [
-        stake,
-        initiateWithdrawal,
-        withdraw,
-        cancelWithdrawal,
-        claimRewards,
-    ])
+    return useMemo(
+        () => ({ stake, initiateWithdrawal, withdraw, cancelWithdrawal, claimRewards }),
+        [stake, initiateWithdrawal, withdraw, cancelWithdrawal, claimRewards]
+    )
 }
-
-
