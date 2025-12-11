@@ -50,13 +50,6 @@ export function useStakeMutations(address?: Address, namespace: string = 'kite',
     const accountKey = stakeQueryKeys.account(namespace, address)
     const statsKey = stakeQueryKeys.stats(namespace)
 
-    // Default to the canonical single-token staking user entity for KITE.
-    // LP pools can override this by passing a different subgraph user entity
-    // via the options object in useStakePendingWithdrawalQuery; for invalidation
-    // we broadly target by namespace and address, so the specific entity string
-    // is not required here.
-    const defaultUserEntity: StakingUserEntity = 'stakingUser'
-
     const handleCommonSuccess = async () => {
         await Promise.all([
             qc.invalidateQueries({ queryKey: accountKey, refetchType: 'active' }),

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { formatNumberWithStyle , sanitizeDecimals , Status } from '~/utils'
+import { formatNumberWithStyle, sanitizeDecimals, Status } from '~/utils'
 import styled from 'styled-components'
 import { CenteredFlex, Flex, HaiButton, Text } from '~/styles'
 import { StatusLabel } from '~/components/StatusLabel'
@@ -19,7 +19,7 @@ import { HAI_VELO_V2_TOKEN_ADDRESS, VE_NFT_CONTRACT_ADDRESS } from '~/services/h
 import { useVelodromePrices } from '~/providers/VelodromePriceProvider'
 
 export function MintHaiVeloActions() {
-    const { 
+    const {
         selectedToken,
         setSelectedToken,
         convertAmountVelo,
@@ -28,16 +28,7 @@ export function MintHaiVeloActions() {
         setConvertAmountHaiVeloV1,
         selectedVeVeloNFTs,
         setSelectedVeVeloNFTs,
-        data: {
-            loading, 
-            error, 
-            veloBalanceFormatted, 
-            veVeloBalanceFormatted,
-            veVeloNFTs,
-            haiVeloV1BalanceFormatted,
-            haiVeloV2Balance,
-            haiVeloV2BalanceFormatted,
-        },
+        data: { loading, error, veloBalanceFormatted, veVeloBalanceFormatted, veVeloNFTs, haiVeloV1BalanceFormatted },
     } = useHaiVelo()
 
     const { tokensData } = useStoreState((state) => state.connectWalletModel)
@@ -73,8 +64,8 @@ export function MintHaiVeloActions() {
         const total = veloAmt + haiVeloV1Amt + veVeloAmt
         const display = total
             ? formatNumberWithStyle(total, {
-                maxDecimals: 2,
-            })
+                  maxDecimals: 2,
+              })
             : '0'
         return { haiVeloReceivedTotalRaw: total, haiVeloReceivedDisplay: display }
     }, [convertAmountVelo, convertAmountHaiVeloV1, selectedVeVeloNFTs, veVeloNFTs])
@@ -95,7 +86,7 @@ export function MintHaiVeloActions() {
 
     // Create veVELO NFT options for multi-select
     const veVeloNFTOptions: MultiSelectOption<string>[] = useMemo(() => {
-        return veVeloNFTs.map(nft => ({
+        return veVeloNFTs.map((nft) => ({
             label: `Lock #${nft.tokenId}`,
             value: nft.tokenId,
             description: `${formatNumberWithStyle(parseFloat(nft.balanceFormatted), {
@@ -112,7 +103,7 @@ export function MintHaiVeloActions() {
             }
             case 'veVELO': {
                 // Calculate total from selected NFTs
-                const selectedNFTs = veVeloNFTs.filter(nft => selectedVeVeloNFTs.includes(nft.tokenId))
+                const selectedNFTs = veVeloNFTs.filter((nft) => selectedVeVeloNFTs.includes(nft.tokenId))
                 const totalBalance = selectedNFTs.reduce((sum, nft) => sum + parseFloat(nft.balanceFormatted), 0)
                 return String(totalBalance)
             }
@@ -359,7 +350,9 @@ export function MintHaiVeloActions() {
                 ) : (
                     <NumberInput
                         label="Convert"
-                        subLabel={`Available: ${getAvailableBalanceDisplay(selectedToken)} ${getTokenLabel(selectedToken)}`}
+                        subLabel={`Available: ${getAvailableBalanceDisplay(selectedToken)} ${getTokenLabel(
+                            selectedToken
+                        )}`}
                         placeholder="Amount to Convert"
                         unitLabel={getTokenLabel(selectedToken)}
                         min="0"
@@ -367,32 +360,33 @@ export function MintHaiVeloActions() {
                         onChange={(value: string) => {
                             const maxStr = getAvailableBalanceRaw(selectedToken)
                             const maxNum = Number((maxStr || '0').toString())
-                            const nextValue = value === ''
-                                ? ''
-                                : (() => {
-                                      const n = Number(value)
-                                      if (!isFinite(n)) return ''
-                                      return n > maxNum ? maxStr : value
-                                  })()
+                            const nextValue =
+                                value === ''
+                                    ? ''
+                                    : (() => {
+                                          const n = Number(value)
+                                          if (!isFinite(n)) return ''
+                                          return n > maxNum ? maxStr : value
+                                      })()
                             if (selectedToken === 'VELO') setConvertAmountVelo(nextValue || '')
                             if (selectedToken === 'haiVELO_v1') setConvertAmountHaiVeloV1(nextValue || '')
                         }}
                         value={selectedToken === 'VELO' ? convertAmountVelo : convertAmountHaiVeloV1}
                         onMax={() => {
                             if (selectedToken === 'VELO') setConvertAmountVelo(getAvailableBalanceRaw(selectedToken))
-                            if (selectedToken === 'haiVELO_v1') setConvertAmountHaiVeloV1(getAvailableBalanceRaw(selectedToken))
+                            if (selectedToken === 'haiVELO_v1')
+                                setConvertAmountHaiVeloV1(getAvailableBalanceRaw(selectedToken))
                         }}
-                        conversion={
-                            (() => {
-                                const rawAmt = selectedToken === 'VELO'
+                        conversion={(() => {
+                            const rawAmt =
+                                selectedToken === 'VELO'
                                     ? Number((convertAmountVelo || '0').replace(/,/g, ''))
                                     : Number((convertAmountHaiVeloV1 || '0').replace(/,/g, ''))
-                                if (rawAmt <= 0) return ''
-                                const price = prices?.VELO?.raw ? Number(prices.VELO.raw) : 0
-                                const usd = rawAmt * (isFinite(price) ? price : 0)
-                                return `~${formatNumberWithStyle(usd, { style: 'currency' })}`
-                            })()
-                        }
+                            if (rawAmt <= 0) return ''
+                            const price = prices?.VELO?.raw ? Number(prices.VELO.raw) : 0
+                            const usd = rawAmt * (isFinite(price) ? price : 0)
+                            return `~${formatNumberWithStyle(usd, { style: 'currency' })}`
+                        })()}
                     />
                 )}
 
@@ -405,13 +399,13 @@ export function MintHaiVeloActions() {
                     onChange={() => {}} // No-op since it's disabled
                     value={haiVeloReceivedDisplay}
                     disabled={true}
-                    conversion={
-                        (() => {
-                            const price = prices?.VELO?.raw ? Number(prices.VELO.raw) : 0
-                            const usd = haiVeloReceivedTotalRaw * (isFinite(price) ? price : 0)
-                            return haiVeloReceivedTotalRaw > 0 ? `~${formatNumberWithStyle(usd, { style: 'currency' })}` : ''
-                        })()
-                    }
+                    conversion={(() => {
+                        const price = prices?.VELO?.raw ? Number(prices.VELO.raw) : 0
+                        const usd = haiVeloReceivedTotalRaw * (isFinite(price) ? price : 0)
+                        return haiVeloReceivedTotalRaw > 0
+                            ? `~${formatNumberWithStyle(usd, { style: 'currency' })}`
+                            : ''
+                    })()}
                 />
 
                 {/* Selected for Conversion Summary (moved below inputs) */}
@@ -449,7 +443,8 @@ export function MintHaiVeloActions() {
                                 {hv1Amt > 0 && (
                                     <Flex $justify="space-between" $align="center">
                                         <Text>
-                                            haiVELO v1: <strong>{formatNumberWithStyle(hv1Amt, { maxDecimals: 2 })}</strong>
+                                            haiVELO v1:{' '}
+                                            <strong>{formatNumberWithStyle(hv1Amt, { maxDecimals: 2 })}</strong>
                                         </Text>
                                         <Text
                                             $textDecoration="underline"
@@ -468,14 +463,20 @@ export function MintHaiVeloActions() {
                                                 <Text>
                                                     veVELO #{n.tokenId}:{' '}
                                                     <strong>
-                                                        {formatNumberWithStyle(parseFloat(n.balanceFormatted), { maxDecimals: 2 })}
+                                                        {formatNumberWithStyle(parseFloat(n.balanceFormatted), {
+                                                            maxDecimals: 2,
+                                                        })}
                                                     </strong>
                                                 </Text>
                                                 <Text
                                                     $textDecoration="underline"
                                                     $color="rgba(0,0,0,0.6)"
                                                     style={{ cursor: 'pointer' }}
-                                                    onClick={() => setSelectedVeVeloNFTs(selectedVeVeloNFTs.filter((id) => id !== n.tokenId))}
+                                                    onClick={() =>
+                                                        setSelectedVeVeloNFTs(
+                                                            selectedVeVeloNFTs.filter((id) => id !== n.tokenId)
+                                                        )
+                                                    }
                                                 >
                                                     Clear
                                                 </Text>
@@ -503,8 +504,8 @@ export function MintHaiVeloActions() {
                 {/* Conversion Warning */}
                 <WarningLabel status={Status.CUSTOM} background="gradientCooler">
                     <Text $fontSize="0.8em">
-                        ⚠️ VELO and haiVELO v1 converted here are permanently max locked into veVELO with
-                        haiVELO v2 issued at a 1:1 ratio.
+                        ⚠️ VELO and haiVELO v1 converted here are permanently max locked into veVELO with haiVELO v2
+                        issued at a 1:1 ratio.
                     </Text>
                 </WarningLabel>
             </Body>
@@ -535,8 +536,8 @@ export function MintHaiVeloActions() {
                             })(),
                             migrateV1Wei: convertAmountHaiVeloV1
                                 ? ethers.utils
-                                    .parseUnits((convertAmountHaiVeloV1 || '0').replace(/,/g, ''), 18)
-                                    .toString()
+                                      .parseUnits((convertAmountHaiVeloV1 || '0').replace(/,/g, ''), 18)
+                                      .toString()
                                 : undefined,
                         })
                         setApprovalsOpen(true)

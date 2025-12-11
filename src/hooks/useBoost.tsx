@@ -1,17 +1,13 @@
 import { useMemo, useCallback } from 'react'
 import { useStoreState } from '~/store'
-// import { useVault } from '~/providers/VaultProvider'
 import { useVelodromePrices } from '~/providers/VelodromePriceProvider'
 import { useAccount } from 'wagmi'
 import { formatUnits, formatEther } from 'ethers/lib/utils'
 import { useLpPool } from './lp/useLpPool'
 import { useLpUserTotalLiquidity } from './lp/useLpUserTotalLiquidity'
 import { useLpUserPositionValue } from './lp/useLpUserPositionValue'
-import { useLpUserPositionsMap } from './lp/useLpUserPositionsMap'
 import { useLpBoostForUser } from './lp/useLpBoostForUser'
 import { useVelodromePositions } from './useVelodrome'
-// import { formatNumberWithStyle } from '~/utils'
-// Replace legacy provider with react-query staking hooks
 import { useStakeAccount } from '~/hooks/staking/useStakeAccount'
 import { useStakeStats } from '~/hooks/staking/useStakeStats'
 import { useHaiVeloCollateralMapping } from './haivelo/useHaiVeloCollateralMapping'
@@ -34,7 +30,6 @@ export function useBoost() {
     const { data: pool } = useLpPool()
     const { value: userTotalLiquidity, loading: userTotalLiquidityLoading } = useLpUserTotalLiquidity(address as any)
     const { loading: userLPValueLoading, value: calculatedUserLPPositionValue } = useLpUserPositionValue(address as any)
-    const { data: userPositionsMap } = useLpUserPositionsMap()
     const lpDataLoading = userTotalLiquidityLoading || userLPValueLoading
     const { lpBoost: lpBoostFromHook, kiteRatio: kiteRatioFromHook } = useLpBoostForUser(address as any)
     const { loading: positionsLoading } = useVelodromePositions()
@@ -53,23 +48,12 @@ export function useBoost() {
     // Get staking data from store
     const {
         stakingModel: { usersStakingData, totalStaked },
-        vaultModel: { list: userPositionsList },
     } = useStoreState((state) => state)
 
-    const {
-        haiMarketPrice,
-        data: { tokenAnalyticsData },
-    } = useAnalytics()
+    const { haiMarketPrice } = useAnalytics()
 
     // Get HAI and WETH prices from analytics provider
     const haiPrice = useMemo(() => parseFloat(haiMarketPrice.raw || '0'), [haiMarketPrice])
-
-    const wethPrice = useMemo(() => {
-        // Find WETH in the token analytics data
-        const wethData = tokenAnalyticsData.find((token) => token.symbol === 'WETH')
-        // Convert from wei to ETH (18 decimals)
-        return wethData ? parseFloat(formatUnits(wethData.currentPrice.toString(), 18)) : 0
-    }, [tokenAnalyticsData])
 
     // No store writes: pricing is consumed directly for calculations
 
@@ -302,14 +286,6 @@ export function useBoost() {
     // Reuse the simulation function from the service
     const simulateNetBoost = useCallback(
         (userAfterStakingAmount: number, totalAfterStakingAmount: number) => {
-            // Calculate LP boost with simulated staking amounts
-            const lpBoostResult = calculateLPBoost({
-                userStakingAmount: userAfterStakingAmount,
-                totalStakingAmount: totalAfterStakingAmount,
-                userLPPosition,
-                totalPoolLiquidity,
-            })
-
             // Calculate haiVELO boost (v1 + v2) with simulated staking amounts
             const hv = calculateHaiVeloBoost({
                 userStakingAmount: userAfterStakingAmount,

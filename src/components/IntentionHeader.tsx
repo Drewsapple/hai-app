@@ -130,7 +130,7 @@ export function IntentionHeader({ children }: IntentionHeaderProps) {
 
     const isUpToExtraSmall = useMediaQuery('upToExtraSmall')
 
-    const { type, stats, stakeConfig } = useMemo(() => {
+    const { type, stats } = useMemo(() => {
         if (location.pathname.startsWith('/auctions')) {
             return {
                 type: Intention.AUCTION,
@@ -211,7 +211,8 @@ export function IntentionHeader({ children }: IntentionHeaderProps) {
 
     const isHaiVeloOpen =
         location.pathname === '/haiVELO' ||
-        (location.pathname === '/vaults/open' && ['HAIVELO', 'HAIVELOV2'].includes(new URLSearchParams(location.search).get('collateral') || ''))
+        (location.pathname === '/vaults/open' &&
+            ['HAIVELO', 'HAIVELOV2'].includes(new URLSearchParams(location.search).get('collateral') || ''))
 
     const baseCopy = copy[type]
     const subtitle = isHaiVeloOpen
@@ -235,7 +236,7 @@ export function IntentionHeader({ children }: IntentionHeaderProps) {
             ? 'stake/hai-bold-curve-lp'
             : location.pathname === '/stake/hai-velo-velo-lp'
             ? 'stake/hai-velo-velo-lp'
-            : ((type as unknown as string) || '')
+            : (type as unknown as string) || ''
 
     return (
         <Container>

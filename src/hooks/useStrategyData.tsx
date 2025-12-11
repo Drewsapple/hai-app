@@ -20,9 +20,6 @@ import { useLpStakingApr } from './staking/useLpStakingApr'
 import { useLpTvl } from './staking/useLpTvl'
 import { buildStakingService } from '~/services/stakingService'
 
-const HAIVELO_DEPOSITER = '0x7F4735237c41F7F8578A9C7d10A11e3BCFa3D4A3'
-const REWARD_DISTRIBUTOR = '0xfEd2eB6325432F0bF7110DcE2CCC5fF811ac3D4D'
-
 const HAI_TOKEN_ADDRESS = import.meta.env.VITE_HAI_ADDRESS as string
 const KITE_TOKEN_ADDRESS = import.meta.env.VITE_KITE_ADDRESS as string
 const OP_TOKEN_ADDRESS = import.meta.env.VITE_OP_ADDRESS as string
@@ -162,11 +159,7 @@ export function useStrategyData(
     )
     const { data: haiBoldLpStats } = useStakeStats(haiBoldCurveLpConfig.namespace, haiBoldLpService)
     const haiBoldLpAprData = useLpStakingApr(haiBoldCurveLpConfig)
-    const {
-        tvlUsd: haiBoldLpPoolTvlUsd,
-        lpPriceUsd: haiBoldLpPriceUsd,
-        loading: haiBoldLpTvlLoading,
-    } = useLpTvl(haiBoldCurveLpConfig)
+    const { lpPriceUsd: haiBoldLpPriceUsd, loading: haiBoldLpTvlLoading } = useLpTvl(haiBoldCurveLpConfig)
 
     // Calculate user's LP staked value in USD
     const haiBoldLpUserStaked = Number(haiBoldLpAccount?.stakedBalance || 0)

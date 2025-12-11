@@ -56,13 +56,15 @@ interface EarnDataState {
     velodromePositionsData: VelodromePositionData[] | undefined
     velodromePricesData: Record<string, VelodromePriceData> | undefined
     haiVeloSafesData: { safes: Array<{ owner: { address: string }; collateral: string }> } | undefined
-    strategyData: {
-        hai?: { apr: number; tvl: number; userPosition: number }
-        haiVelo?: { tvl: number; userPosition: number; boostApr: unknown }
-        kiteStaking?: { tvl: number; userPosition: number; apr: number }
-        haiBoldLp?: { tvl: number; userPosition: number; apr: number; boostApr: unknown; loading: boolean }
-    } | undefined
-    
+    strategyData:
+        | {
+              hai?: { apr: number; tvl: number; userPosition: number }
+              haiVelo?: { tvl: number; userPosition: number; boostApr: unknown }
+              kiteStaking?: { tvl: number; userPosition: number; apr: number }
+              haiBoldLp?: { tvl: number; userPosition: number; apr: number; boostApr: unknown; loading: boolean }
+          }
+        | undefined
+
     // Store state data
     tokensData: Record<string, TokenData>
     userPositionsList: UserPosition[]
@@ -70,13 +72,13 @@ interface EarnDataState {
     totalStaked: string
     stakingApyData: Array<{ id: number; rpToken: string; rpRate: BigNumber }>
     tokensFetchedData: Record<string, TokenFetchData>
-    
+
     // Loading states
     loading: boolean
     allDataLoaded: boolean
     stakingDataLoaded: boolean
     storeDataLoaded: boolean
-    
+
     // Error states
     error: AppError
     dataLoadingError: AppError
@@ -94,7 +96,11 @@ export function useEarnData(): EarnDataState {
     } = useStoreState((state) => state)
 
     // 1. Load system state data
-    const { data: systemStateData, loading: systemStateLoading, error: systemStateError } = useQuery<{
+    const {
+        data: systemStateData,
+        loading: systemStateLoading,
+        error: systemStateError,
+    } = useQuery<{
         systemStates: Array<{ erc20CoinTotalSupply: string; [key: string]: unknown }>
     }>(SYSTEMSTATE_QUERY, {
         fetchPolicy: 'cache-first',
@@ -123,11 +129,7 @@ export function useEarnData(): EarnDataState {
     const { data: velodromeData, loading: velodromeLoading, error: velodromeError } = useVelodrome()
 
     // 6. Load velodrome positions data
-    const {
-        data: velodromePositionsData,
-        loading: velodromePositionsLoading,
-        error: velodromePositionsError,
-    } = useVelodromePositions()
+    const { data: velodromePositionsData, error: velodromePositionsError } = useVelodromePositions()
 
     // 7. Load velodrome prices
     const {
@@ -137,11 +139,9 @@ export function useEarnData(): EarnDataState {
     } = useVelodromePrices()
 
     // 8. Load hai velo safes data
-    const {
-        data: haiVeloSafesData,
-        loading: haiVeloSafesLoading,
-        error: haiVeloSafesError,
-    } = useQuery<{ safes: Array<{ owner: { address: string }; collateral: string }> }>(ALL_SAFES_QUERY, {
+    const { data: haiVeloSafesData, error: haiVeloSafesError } = useQuery<{
+        safes: Array<{ owner: { address: string }; collateral: string }>
+    }>(ALL_SAFES_QUERY, {
         variables: {
             collateralTypeId: 'HAIVELO',
         },
@@ -187,7 +187,7 @@ export function useEarnData(): EarnDataState {
         systemStateError,
         haiVeloSafesError
     )
-    
+
     const hasErrors = hasAnyError(
         minterVaultsError,
         collateralTypesError,
@@ -209,7 +209,7 @@ export function useEarnData(): EarnDataState {
         velodromePricesData,
         haiVeloSafesData,
         strategyData,
-        
+
         // Store state data
         tokensData,
         userPositionsList,
@@ -217,16 +217,16 @@ export function useEarnData(): EarnDataState {
         totalStaked,
         stakingApyData,
         tokensFetchedData,
-        
+
         // Loading states
         loading,
         allDataLoaded,
         stakingDataLoaded,
         storeDataLoaded,
-        
+
         // Error states
         error: dataLoadingError,
         dataLoadingError,
         hasErrors,
     }
-} 
+}

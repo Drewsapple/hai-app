@@ -12,15 +12,13 @@ import { Stats, type StatProps } from '~/components/Stats'
 import { HaiButton } from '~/styles'
 
 export function HaiVeloStats() {
-    const { graphSummary, graphData, data: analytics } = useAnalytics()
+    const { graphSummary } = useAnalytics()
     const { popupsModel: popupsActions } = useStoreActions((actions) => actions)
-    const { totalRewardsValue, rewardTokens, loading } = useEarnStrategies()
+    const { totalRewardsValue, loading } = useEarnStrategies()
     const { prices: veloPrices, loading: veloLoading } = useVelodromePrices()
 
     const veloPriceUsd = useMemo(() => Number(veloPrices?.VELO?.raw || 0), [veloPrices])
     const { combined, isLoading: hvLoading } = useHaiVeloStatsHook(veloPriceUsd)
-
-    const redemptionPrice = graphData?.systemStates?.[0]?.currentRedemptionPrice?.value
 
     const tvlFormatted = useMemo(() => {
         if (hvLoading || veloLoading) return '...'
@@ -43,7 +41,9 @@ export function HaiVeloStats() {
 
     const aprFormatted = useMemo(() => {
         const value = aprLoading ? undefined : underlyingAPR
-        return value === undefined ? '...' : formatNumberWithStyle(value * 100, { style: 'percent', suffixed: true, maxDecimals: 2 })
+        return value === undefined
+            ? '...'
+            : formatNumberWithStyle(value * 100, { style: 'percent', suffixed: true, maxDecimals: 2 })
     }, [underlyingAPR, aprLoading])
 
     const myRewardsHeader = useMemo(() => {
@@ -79,5 +79,3 @@ export function HaiVeloStats() {
 
     return <Stats stats={stats} columns="repeat(3, 1fr) 1.2fr" fun />
 }
-
-

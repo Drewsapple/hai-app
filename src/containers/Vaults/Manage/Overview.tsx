@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatCollateralLabel , Status, VaultAction, formatNumberWithStyle } from '~/utils'
+import { formatCollateralLabel, Status, VaultAction, formatNumberWithStyle } from '~/utils'
 import { useStoreState } from '~/store'
 import { useVault } from '~/providers/VaultProvider'
 // import { useEarnStrategies } from '~/hooks'
@@ -123,8 +123,8 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
         const effectiveDeposit = formState.withdraw
             ? -1 * Number(formState.withdraw)
             : formState.deposit
-                ? Number(formState.deposit)
-                : 0
+            ? Number(formState.deposit)
+            : 0
 
         const simulatedBoostAfterDeposit = simulateBoostAfterDeposit(effectiveDeposit)
 
@@ -215,25 +215,25 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                 label: crIsInfinite
                     ? 'No Debt'
                     : formatNumberWithStyle(collateralRatio, {
-                        maxDecimals: 1,
-                        scalingFactor: 0.01,
-                        style: 'percent',
-                    }),
+                          maxDecimals: 1,
+                          scalingFactor: 0.01,
+                          style: 'percent',
+                      }),
             },
             simulatedProgress:
                 action !== VaultAction.CREATE && simulation?.collateralRatio
                     ? {
-                        progress: simulatedCrIsInfinite
-                            ? 1
-                            : Math.min(parseFloat(simulation.collateralRatio), max) / max,
-                        label: simulatedCrIsInfinite
-                            ? 'No Debt'
-                            : formatNumberWithStyle(simulation.collateralRatio, {
-                                maxDecimals: 1,
-                                scalingFactor: 0.01,
-                                style: 'percent',
-                            }),
-                    }
+                          progress: simulatedCrIsInfinite
+                              ? 1
+                              : Math.min(parseFloat(simulation.collateralRatio), max) / max,
+                          label: simulatedCrIsInfinite
+                              ? 'No Debt'
+                              : formatNumberWithStyle(simulation.collateralRatio, {
+                                    maxDecimals: 1,
+                                    scalingFactor: 0.01,
+                                    style: 'percent',
+                                }),
+                      }
                     : undefined,
             labels,
             colorLimits: labels.map(({ progress }) => progress) as [number, number, number],
@@ -297,10 +297,10 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                         <strong>
                             {collateral.priceInUSD
                                 ? formatNumberWithStyle(collateral.priceInUSD.toString(), {
-                                    minDecimals: 2,
-                                    maxDecimals: 2,
-                                    style: 'currency',
-                                })
+                                      minDecimals: 2,
+                                      maxDecimals: 2,
+                                      style: 'currency',
+                                  })
                                 : '--'}
                         </strong>
                     </Text>
@@ -309,10 +309,10 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                         <strong>
                             {liquidationData?.currentRedemptionPrice
                                 ? formatNumberWithStyle(liquidationData.currentRedemptionPrice, {
-                                    minDecimals: 2,
-                                    maxDecimals: 2,
-                                    style: 'currency',
-                                })
+                                      minDecimals: 2,
+                                      maxDecimals: 2,
+                                      style: 'currency',
+                                  })
                                 : '--'}
                         </strong>
                     </Text>
@@ -349,10 +349,10 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                         value={
                             safetyRatio
                                 ? formatNumberWithStyle(safetyRatio, {
-                                    style: 'percent',
-                                    maxDecimals: 1,
-                                    scalingFactor: 0.01,
-                                })
+                                      style: 'percent',
+                                      maxDecimals: 1,
+                                      scalingFactor: 0.01,
+                                  })
                                 : '--'
                         }
                         label="Min. Coll. Ratio"
@@ -363,9 +363,9 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                         value={
                             collateral.liquidationData?.liquidationCRatio
                                 ? formatNumberWithStyle(collateral.liquidationData.liquidationCRatio, {
-                                    style: 'percent',
-                                    maxDecimals: 1,
-                                })
+                                      style: 'percent',
+                                      maxDecimals: 1,
+                                  })
                                 : '--'
                         }
                         label="Liq. Coll. Ratio"
@@ -381,7 +381,6 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                     const stabilityFeeCost = -parseFloat(summary.stabilityFee.raw || '0') // Use raw value directly as negative cost
 
                     let netAPR: number = 0
-                    let calculationMethod: string = ''
                     let simulatedNetAPR: number | undefined = undefined
 
                     // For new vaults, check if user has input actual values
@@ -416,15 +415,9 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                                 // Net APR weighted by total position value (collateral + debt)
                                 const totalPositionValue = collateralUsdValue + debtUsdValue
                                 netAPR = totalPositionValue > 0 ? totalYield / totalPositionValue : 0
-                                calculationMethod = `Based on your inputs - Collateral yield: $${collateralYield.toFixed(
-                                    2
-                                )}/year + Debt net yield: $${debtNetYield.toFixed(2)}/year = $${totalYield.toFixed(
-                                    2
-                                )}/year on $${collateralUsdValue.toLocaleString()} collateral`
                             } else {
                                 // Fallback to simple addition if no USD values available
                                 netAPR = underlyingAPR + mintingIncentivesAPR + stabilityFeeCost
-                                calculationMethod = 'Simple addition (fallback)'
                             }
                         } else {
                             // No user inputs yet, use assumed typical ratio
@@ -441,11 +434,6 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                             // Net APR weighted by total position value (collateral + debt)
                             const assumedTotalPositionValue = assumedCollateralValue + assumedDebtValue
                             netAPR = assumedTotalPositionValue > 0 ? totalYield / assumedTotalPositionValue : 0
-                            calculationMethod = `Estimated for 200% collateral ratio: $${collateralYield.toFixed(
-                                2
-                            )} collateral yield + $${debtNetYield.toFixed(2)} debt net yield = $${totalYield.toFixed(
-                                2
-                            )} per $${assumedCollateralValue} collateral`
                         }
                     } else {
                         // For existing vaults, use weighted average based on USD values
@@ -467,11 +455,6 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                             // Net APR weighted by total position value (collateral + debt)
                             const totalPositionValue = collateralUsdValue + debtUsdValue
                             netAPR = totalPositionValue > 0 ? totalYield / totalPositionValue : 0
-                            calculationMethod = `Collateral yield: $${collateralYield.toFixed(
-                                2
-                            )}/year + Debt net yield: $${debtNetYield.toFixed(2)}/year = $${totalYield.toFixed(
-                                2
-                            )}/year on $${collateralUsdValue.toLocaleString()} collateral`
 
                             // Calculate simulated Net APR if there's an active simulation
                             if (simulation && (simulation.collateral || simulation.debt)) {
@@ -504,7 +487,6 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                         } else {
                             // Fallback to simple addition if no position values
                             netAPR = underlyingAPR + mintingIncentivesAPR + stabilityFeeCost
-                            calculationMethod = 'Simple addition (fallback)'
                         }
                     }
 
@@ -554,9 +536,9 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                                 simulatedNetAPR !== undefined &&
                                 Math.abs(simulatedNetAPR - netAPR) > 0.0001
                                     ? formatNumberWithStyle(simulatedNetAPR, {
-                                        style: 'percent',
-                                        maxDecimals: 2,
-                                    })
+                                          style: 'percent',
+                                          maxDecimals: 2,
+                                      })
                                     : undefined
                             }
                         />
@@ -569,8 +551,8 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                     simulatedValue={
                         vault && simulation?.riskStatus
                             ? `${simulation.collateralRatio ? summary.collateralRatio.after.formatted : '--%'} (${
-                                simulation.riskStatus
-                            })`
+                                  simulation.riskStatus
+                              })`
                             : undefined
                     }
                     alert={riskStatus ? { status: riskStatus } : undefined}
@@ -592,12 +574,12 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                                 userHaiVeloBoostData.myBoost === 2
                                     ? undefined
                                     : {
-                                        variant: 'yellowish',
-                                        text: 'Stake KITE',
-                                        onClick: () => {
-                                            window.location.href = '/stake'
-                                        },
-                                    }
+                                          variant: 'yellowish',
+                                          text: 'Stake KITE',
+                                          onClick: () => {
+                                              window.location.href = '/stake'
+                                          },
+                                      }
                             }
                             tooltip={'Your staking share of the total stKITE supply'}
                         />
@@ -612,11 +594,11 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                             simulatedValue={
                                 userHaiVeloBoostData.myHaiVeloShare !== userHaiVeloBoostData.myHaiVeloSimulatedShare
                                     ? `${formatNumberWithStyle(Number(userHaiVeloBoostData.myHaiVeloSimulatedShare), {
-                                        minDecimals: 0,
-                                        maxDecimals: 2,
-                                        scalingFactor: 1,
-                                        style: 'percent',
-                                    })}`
+                                          minDecimals: 0,
+                                          maxDecimals: 2,
+                                          scalingFactor: 1,
+                                          style: 'percent',
+                                      })}`
                                     : ''
                             }
                             tooltip={'The amount of  haiVELO you have in compare to the total haiVELO supply'}
@@ -631,13 +613,13 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                             simulatedValue={
                                 userHaiVeloBoostData.myBoost !== userHaiVeloBoostData.simulatedBoostAfterDeposit
                                     ? `${formatNumberWithStyle(
-                                        Number(userHaiVeloBoostData.simulatedBoostAfterDeposit),
-                                        {
-                                            minDecimals: 0,
-                                            maxDecimals: 2,
-                                            scalingFactor: 1,
-                                        }
-                                    )}x`
+                                          Number(userHaiVeloBoostData.simulatedBoostAfterDeposit),
+                                          {
+                                              minDecimals: 0,
+                                              maxDecimals: 2,
+                                              scalingFactor: 1,
+                                          }
+                                      )}x`
                                     : ''
                             }
                             tooltip={'The amount of Boost you get for rewards over your haiVELO position'}
@@ -657,12 +639,12 @@ export function Overview({ isHAIVELO }: { isHAIVELO: boolean }) {
                                 boostData.myBoost === 2
                                     ? undefined
                                     : {
-                                        variant: 'yellowish',
-                                        text: 'Stake KITE',
-                                        onClick: () => {
-                                            window.location.href = '/stake'
-                                        },
-                                    }
+                                          variant: 'yellowish',
+                                          text: 'Stake KITE',
+                                          onClick: () => {
+                                              window.location.href = '/stake'
+                                          },
+                                      }
                             }
                             tooltip={'Your staking share of the total stKITE supply'}
                         />

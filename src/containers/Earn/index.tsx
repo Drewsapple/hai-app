@@ -18,19 +18,8 @@ const wrappers: WrapperAdProps[] = [
 ]
 
 export function Earn() {
-    const {
-        rawData,
-        headers,
-        rows,
-        loading,
-        error,
-        uniError,
-        veloError,
-        sorting,
-        setSorting,
-        filterEmpty,
-        setFilterEmpty,
-    } = useEarnStrategies()
+    const { headers, rows, loading, error, uniError, veloError, sorting, setSorting, filterEmpty, setFilterEmpty } =
+        useEarnStrategies()
 
     const isUpToMedium = useMediaQuery('upToMedium')
 

@@ -1,4 +1,3 @@
-import React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '~/test/testUtils'
@@ -55,14 +54,16 @@ describe('useStakingBoost', () => {
     it('computes LP boost for LP staking configs using calculateLPBoost', async () => {
         vi.spyOn(wagmi, 'useAccount').mockReturnValue({ address: '0x'.padEnd(42, 'a') } as any)
 
-        vi.spyOn(stakeAccountHook, 'useStakeAccount').mockImplementation((_addr: any, namespace: string) => {
-            if (namespace === kiteConfig.namespace) {
-                return { data: { stakedBalance: '25' }, isLoading: false } as any
+        vi.spyOn(stakeAccountHook, 'useStakeAccount').mockImplementation(
+            (_addr: any, namespace: string | undefined) => {
+                if (namespace === kiteConfig.namespace) {
+                    return { data: { stakedBalance: '25' }, isLoading: false } as any
+                }
+                return { data: { stakedBalance: '10' }, isLoading: false } as any
             }
-            return { data: { stakedBalance: '10' }, isLoading: false } as any
-        })
+        )
 
-        vi.spyOn(stakeStatsHook, 'useStakeStats').mockImplementation((namespace: string) => {
+        vi.spyOn(stakeStatsHook, 'useStakeStats').mockImplementation((namespace: string | undefined) => {
             if (namespace === kiteConfig.namespace) {
                 return { data: { totalStaked: '100' }, isLoading: false } as any
             }
@@ -78,6 +79,4 @@ describe('useStakingBoost', () => {
             expect(screen.getByTestId('lp').textContent).toBe('1.8')
         })
     })
-}
-
-
+})

@@ -11,8 +11,6 @@ function mockContract(methods: Record<string, any>) {
 }
 
 describe('stakingService (reads)', () => {
-    const original = { ...ethers }
-
     beforeEach(() => {
         vi.restoreAllMocks()
     })
@@ -53,10 +51,6 @@ describe('stakingService (reads)', () => {
             })
         )
         const res = await getRewards('0x'.padEnd(42, 'a') as any, provider)
-        expect(res).toEqual([
-            { tokenAddress: '0x1111111111111111111111111111111111111111', amount: '1.5' },
-        ])
+        expect(res).toEqual([{ tokenAddress: '0x1111111111111111111111111111111111111111', amount: '1.5' }])
     })
 })
-
-
