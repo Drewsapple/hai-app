@@ -103,7 +103,7 @@ export function useVelodrome() {
     return {
         data: query.data,
         loading: query.isLoading,
-        error: query.error?.message || '',
+        error: query.error?.message,
         refetch: query.refetch,
     }
 }
@@ -139,7 +139,7 @@ export function useVelodromePositions() {
             return positionData
         },
         {
-            enabled: Boolean(velodromeSugarContract && address),
+            enabled: Boolean(velodromeSugarContract),
             staleTime: 20_000,
             keepPreviousData: true,
         }
@@ -148,7 +148,7 @@ export function useVelodromePositions() {
     return {
         data: query.data,
         loading: query.isLoading,
-        error: query.error?.message || '',
+        error: query.error?.message,
         refetch: query.refetch,
     }
 }

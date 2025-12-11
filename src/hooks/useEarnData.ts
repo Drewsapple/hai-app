@@ -74,7 +74,7 @@ interface EarnDataState {
     
     // Loading states
     loading: boolean
-    allDataLoaded: boolean
+    coreDataLoaded: boolean
     stakingDataLoaded: boolean
     storeDataLoaded: boolean
     
@@ -168,7 +168,7 @@ export function useEarnData(): EarnDataState {
     const storeDataLoaded = usersStakingData && userPositionsList && !!tokensFetchedData
 
     // Core data excludes user-specific velodrome positions and HAIVELO safes
-    const allDataLoaded =
+    const coreDataLoaded =
         !minterVaultsLoading &&
         !collateralTypesLoading &&
         !velodromeLoading &&
@@ -176,7 +176,7 @@ export function useEarnData(): EarnDataState {
         !systemStateLoading
 
     // Initial render should not be blocked by user-specific data
-    const loading = !allDataLoaded || !stakingDataLoaded || !storeDataLoaded
+    const loading = !coreDataLoaded || !stakingDataLoaded || !storeDataLoaded
 
     // Calculate error states using error handling utilities
     const dataLoadingError = combineErrors(
@@ -221,7 +221,7 @@ export function useEarnData(): EarnDataState {
         
         // Loading states
         loading,
-        allDataLoaded,
+        coreDataLoaded,
         stakingDataLoaded,
         storeDataLoaded,
         
