@@ -41,9 +41,7 @@ export function InstantWithdrawExecute({
     const { address } = useAccount()
     const { stakingModel: stakingActions } = useStoreActions((actions) => actions)
     const stakingCtx = useStaking()
-    const refetchAll = stakingCtx?.refetchAll
-        ? () => stakingCtx.refetchAll({})
-        : () => Promise.resolve()
+    const refetchAll = stakingCtx?.refetchAll ? () => stakingCtx.refetchAll({}) : () => Promise.resolve()
 
     const service = useMemo(
         () =>
@@ -187,8 +185,8 @@ export function InstantWithdrawExecute({
             <ModalBody>
                 <Flex $width="100%" $column $gap={12} $align="flex-start" $justify="flex-start">
                     <Description>
-                        This staking contract has no cooldown period. Complete both steps below to unstake and
-                        withdraw your {tokenLabel} immediately.
+                        This staking contract has no cooldown period. Complete both steps below to unstake and withdraw
+                        your {tokenLabel} immediately.
                     </Description>
                     <TransactionSummary heading="Withdrawal Steps" items={summaryItems} />
                 </Flex>
@@ -207,4 +205,3 @@ const Description = styled(Text)`
         font-size: ${theme.font.small};
     `}
 `
-

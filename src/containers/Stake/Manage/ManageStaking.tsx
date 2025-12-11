@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { ActionState, VaultAction, formatNumberWithStyle } from '~/utils'
-import { useStoreActions, useStoreState } from '~/store'
+import { useStoreActions } from '~/store'
 import { useVault } from '~/providers/VaultProvider'
 import styled from 'styled-components'
 import { CenteredFlex, Flex, HaiButton, Text } from '~/styles'

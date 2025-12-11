@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react'
 import { useStoreState } from '~/store'
 import { useVelodromePrices } from '~/providers/VelodromePriceProvider'
 import { useAccount } from 'wagmi'
-import { formatUnits, formatEther } from 'ethers/lib/utils'
+import { formatEther } from 'ethers/lib/utils'
 import { useLpPool } from './lp/useLpPool'
 import { useLpUserTotalLiquidity } from './lp/useLpUserTotalLiquidity'
 import { useLpUserPositionValue } from './lp/useLpUserPositionValue'
@@ -17,7 +17,6 @@ import { ALL_COLLATERAL_TYPES_QUERY } from '~/utils/graphql/queries'
 import { useMinterVaults } from '~/hooks/useMinterVaults'
 import { REWARDS } from '~/utils/rewards'
 import {
-    calculateLPBoost,
     calculateHaiVeloBoost,
     calculateVaultBoost,
     combineBoostValues,

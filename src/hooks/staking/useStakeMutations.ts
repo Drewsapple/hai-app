@@ -32,7 +32,6 @@ import type { Address } from '~/services/stakingService'
 import { client as apolloClient } from '~/utils/graphql/client'
 import { defaultStakingService } from '~/services/stakingService'
 import { stakeQueryKeys } from '~/hooks/staking/stakeQueryKeys'
-import type { StakingUserEntity } from '~/types/stakingConfig'
 
 type AccountCache = {
     stakedBalance: string

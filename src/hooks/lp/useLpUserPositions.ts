@@ -19,5 +19,3 @@ export function useLpUserPositions(address?: string) {
         error,
     }
 }
-
-

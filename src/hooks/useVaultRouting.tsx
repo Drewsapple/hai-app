@@ -62,7 +62,9 @@ export function useVaultRouting(address?: string) {
                 vaultActions.setVaultData({
                     ...DEFAULT_VAULT_DATA,
                     collateral: symbols.includes(collateral === 'HAIVELO' ? 'HAIVELOV2' : collateral)
-                        ? (collateral === 'HAIVELO' ? 'HAIVELOV2' : collateral)
+                        ? collateral === 'HAIVELO'
+                            ? 'HAIVELOV2'
+                            : collateral
                         : 'WETH',
                 })
                 break

@@ -74,7 +74,9 @@ export function StakingTxModal({
             case StakingTxStep.APPROVE:
                 return (
                     <Approvals
-                        onNext={() => setStep(isInstantWithdraw ? StakingTxStep.INSTANT_WITHDRAW : StakingTxStep.CONFIRM)}
+                        onNext={() =>
+                            setStep(isInstantWithdraw ? StakingTxStep.INSTANT_WITHDRAW : StakingTxStep.CONFIRM)
+                        }
                         isStaking={isStaking}
                         isWithdraw={isWithdraw}
                         amount={amount}
@@ -96,7 +98,19 @@ export function StakingTxModal({
                     />
                 )
         }
-    }, [step, handleClose, isStaking, isInstantWithdraw, amount, stakedAmount, totalStaked, cooldownPeriod, isWithdraw, onSuccess, config])
+    }, [
+        step,
+        handleClose,
+        isStaking,
+        isInstantWithdraw,
+        amount,
+        stakedAmount,
+        totalStaked,
+        cooldownPeriod,
+        isWithdraw,
+        onSuccess,
+        config,
+    ])
 
     return (
         <Modal

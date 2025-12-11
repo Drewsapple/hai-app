@@ -386,10 +386,10 @@ export function useStakingSummary(): StakingSummaryData {
     // Return all necessary data and functions
     return stakingSummary
         ? {
-            ...stakingSummary,
-            stakingData,
-            simulateNetBoost,
-            calculateSimulatedValues,
-        }
+              ...stakingSummary,
+              stakingData,
+              simulateNetBoost,
+              calculateSimulatedValues,
+          }
         : defaultSummary
 }

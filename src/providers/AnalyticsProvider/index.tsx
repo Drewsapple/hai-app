@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo } from 'react'
-import { useQuery , gql } from '@apollo/client'
+import { useQuery, gql } from '@apollo/client'
 
 import type { ReactChildren, SummaryItemValue } from '~/types'
 import { Timeframe } from '~/utils'

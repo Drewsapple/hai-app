@@ -85,12 +85,8 @@ describe('useStakeMutations', () => {
                 )
             ).toBe(true)
             expect(
-                refetchSpy.mock.calls.some((call) =>
-                    JSON.stringify(call[0]?.queryKey || call[0]).includes('"pending"')
-                )
+                refetchSpy.mock.calls.some((call) => JSON.stringify(call[0]?.queryKey || call[0]).includes('"pending"'))
             ).toBe(true)
         })
     })
 })
-
-

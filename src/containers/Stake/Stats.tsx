@@ -110,49 +110,42 @@ export function StakeStats({ config }: { config?: StakingConfig }) {
 
         const hasKiteRewards = isKitePool && Array.isArray(userRewards) && userRewards.length > 0
 
-        const rewardsRow: StatProps | null =
-            hasKiteRewards
-                ? {
-                      header: formatNumberWithStyle(
-                          userRewards.reduce(
-                              (
-                                  acc: number,
-                                  reward: {
-                                      amount: ethers.BigNumber
-                                      tokenAddress: string
-                                  }
-                              ) => {
-                                  const amount = parseFloat(ethers.utils.formatEther(reward.amount))
-                                  const rewardMeta = rewardsDataMap[
-                                      reward.tokenAddress as keyof typeof rewardsDataMap
-                                  ]
-                                  const rawPrice = rewardMeta?.price as unknown
-                                  const price =
-                                      typeof rawPrice === 'number'
-                                          ? rawPrice
-                                          : typeof rawPrice === 'string'
-                                              ? Number(rawPrice)
-                                              : 0
-                                  return acc + amount * price
-                              },
-                              0
-                          ),
-                          { style: 'currency', minDecimals: 0, maxDecimals: 2 }
+        const rewardsRow: StatProps | null = hasKiteRewards
+            ? {
+                  header: formatNumberWithStyle(
+                      userRewards.reduce(
+                          (
+                              acc: number,
+                              reward: {
+                                  amount: ethers.BigNumber
+                                  tokenAddress: string
+                              }
+                          ) => {
+                              const amount = parseFloat(ethers.utils.formatEther(reward.amount))
+                              const rewardMeta = rewardsDataMap[reward.tokenAddress as keyof typeof rewardsDataMap]
+                              const rawPrice = rewardMeta?.price as unknown
+                              const price =
+                                  typeof rawPrice === 'number'
+                                      ? rawPrice
+                                      : typeof rawPrice === 'string'
+                                      ? Number(rawPrice)
+                                      : 0
+                              return acc + amount * price
+                          },
+                          0
                       ),
-                      headerStatus: <RewardsTokenArray tokens={['HAI', 'KITE', 'OP']} hideLabel />,
-                      label: 'My Staking Rewards',
-                      tooltip:
-                          'Claim your staking rewards. Unclaimed rewards will accrue below and do not expire.',
-                      button: (
-                          <HaiButton
-                              $variant="yellowish"
-                              onClick={() => popupsActions.setIsStakeClaimPopupOpen(true)}
-                          >
-                              Claim
-                          </HaiButton>
-                      ),
-                  }
-                : null
+                      { style: 'currency', minDecimals: 0, maxDecimals: 2 }
+                  ),
+                  headerStatus: <RewardsTokenArray tokens={['HAI', 'KITE', 'OP']} hideLabel />,
+                  label: 'My Staking Rewards',
+                  tooltip: 'Claim your staking rewards. Unclaimed rewards will accrue below and do not expire.',
+                  button: (
+                      <HaiButton $variant="yellowish" onClick={() => popupsActions.setIsStakeClaimPopupOpen(true)}>
+                          Claim
+                      </HaiButton>
+                  ),
+              }
+            : null
 
         const boostTooltip = isKitePool ? (
             <Text>

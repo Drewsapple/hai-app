@@ -51,5 +51,3 @@ export function useStakePendingWithdrawal(namespace: string, _poolKey: string, a
 
     return pending
 }
-
-

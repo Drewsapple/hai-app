@@ -141,7 +141,7 @@ export function useTokenApproval(
         console.log('currentAllowance.lt(approvalAmount):', needsApproval)
         console.log('currentAllowance:', currentAllowance.toString())
         console.log('approvalAmount:', approvalAmount.toString())
-        
+
         if (needsApproval) {
             if (pendingAllowance || loading) {
                 console.log('RESULT: PENDING')
@@ -150,7 +150,7 @@ export function useTokenApproval(
             console.log('RESULT: NOT_APPROVED')
             return ApprovalState.NOT_APPROVED
         }
-        
+
         console.log('RESULT: APPROVED (allowance >= amount needed)')
         return ApprovalState.APPROVED
     }, [amount, tokenAddress, spender, geb, currentAllowance, approvalAmount, pendingAllowance, loading])

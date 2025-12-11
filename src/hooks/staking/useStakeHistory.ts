@@ -39,5 +39,3 @@ export function useStakeHistory(address?: Address) {
         refetch,
     }
 }
-
-
