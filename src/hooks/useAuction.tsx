@@ -3,13 +3,12 @@ import { BigNumber } from 'ethers'
 import { formatEther } from 'ethers/lib/utils'
 
 import type { IAuction } from '~/types'
-import { formatNumberWithStyle, getAuctionStatus, parseRemainingTime, tokenMap } from '~/utils'
+import { formatNumberWithStyle, parseRemainingTime, tokenMap } from '~/utils'
 import { useStoreState } from '~/store'
 import { useVelodromePrices } from '~/providers/VelodromePriceProvider'
 
 export function useAuction(auction: IAuction, timeEl?: HTMLElement | null) {
     const {
-        auctionModel: { auctionsData },
         vaultModel: { liquidationData },
     } = useStoreState((state) => state)
     const { prices } = useVelodromePrices()
@@ -71,7 +70,7 @@ export function useAuction(auction: IAuction, timeEl?: HTMLElement | null) {
         return () => clearInterval(int)
     }, [timeEl, auction.auctionDeadline, refresher])
 
-    const status = useMemo(() => getAuctionStatus(auction, auctionsData), [auction, auctionsData])
+    const status = auction.status
 
     const sellToken = useMemo(() => tokenMap[auction.sellToken] || auction.sellToken, [auction.sellToken])
 

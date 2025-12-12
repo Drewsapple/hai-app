@@ -1,31 +1,29 @@
 import type { IAuction } from '~/types'
 import { Status } from '../constants'
-import { type AuctionData } from '@hai-on-op/sdk'
 import { type QueryEnglishAuction } from '../graphql'
 
 type AuctionStatusProps = {
     auctionDeadline: IAuction['auctionDeadline']
-    winner: IAuction['winner']
     isClaimed: IAuction['isClaimed']
     englishAuctionType: IAuction['englishAuctionType']
-    biddersList?: IAuction['biddersList']
+    bids?: Array<{ createdAt: string }>
 }
-export function getAuctionStatus(auction: AuctionStatusProps, auctionsData: AuctionData | null) {
-    const bids = auction.biddersList || []
+export function getAuctionStatus(auction: AuctionStatusProps, bidDurations: { debt?: number; surplus?: number }) {
+    const bids = auction.bids || []
 
     switch (auction.englishAuctionType) {
         case 'COLLATERAL': {
-            if (auction.isClaimed || auction.winner) return Status.COMPLETED
+            if (auction.isClaimed) return Status.COMPLETED
             return Status.LIVE
         }
         case 'DEBT': {
             if (auction.isClaimed) return Status.COMPLETED
-            if (auctionsData && bids.length > 1) {
+            if (bids.length > 1) {
                 const { createdAt } = bids[0]
                 const timeSinceBid = Date.now() / 1000 - parseInt(createdAt)
                 if (
                     Date.now() > 1000 * parseInt(auction.auctionDeadline) ||
-                    timeSinceBid > auctionsData.debtAuctionHouseParams.bidDuration.toNumber()
+                    timeSinceBid > (bidDurations?.debt ?? Infinity)
                 ) {
                     return Status.SETTLING
                 }
@@ -35,12 +33,12 @@ export function getAuctionStatus(auction: AuctionStatusProps, auctionsData: Auct
         }
         case 'SURPLUS': {
             if (auction.isClaimed) return Status.COMPLETED
-            if (auctionsData && bids.length > 1) {
+            if (bids.length > 1) {
                 const { createdAt } = bids[0]
                 const timeSinceBid = Date.now() / 1000 - parseInt(createdAt)
                 if (
                     Date.now() > 1000 * parseInt(auction.auctionDeadline) ||
-                    timeSinceBid > auctionsData.surplusAuctionHouseParams.bidDuration.toNumber()
+                    timeSinceBid > (bidDurations?.surplus ?? Infinity)
                 ) {
                     return Status.SETTLING
                 }

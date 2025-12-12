@@ -33,12 +33,10 @@ const auctionFilters: AuctionTypeFilter[] = [
     },
 ]
 
-type AuctionsListProps = {
-    isLoading: boolean
-    error?: string
-}
-export function AuctionsList({ isLoading, error }: AuctionsListProps) {
+export function AuctionsList() {
     const {
+        isLoading,
+        error,
         headers,
         rows,
         sorting,
@@ -83,6 +81,7 @@ export function AuctionsList({ isLoading, error }: AuctionsListProps) {
                                 onClick={() => {
                                     // e.stopPropagation()
                                     setTypeFilter(type === 'All' ? undefined : type)
+                                    if (type === 'SURPLUS' || type === 'DEBT') setSaleAssetsFilter(undefined)
                                 }}
                             >
                                 {!icon ? null : icon === 'All' ? (
@@ -142,7 +141,7 @@ export function AuctionsList({ isLoading, error }: AuctionsListProps) {
                 sorting={sorting}
                 setSorting={setSorting}
                 isLoading={isLoading}
-                error={error}
+                error={error?.toString()}
             />
         </NavContainer>
     )

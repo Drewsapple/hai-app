@@ -1,19 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { useQuery } from '@apollo/client'
 
-import type { AuctionEventType, IAuction, SortableHeader, Sorting } from '~/types'
-import {
-    AUCTION_RESTART_QUERY,
-    QueryAuctionRestarts,
-    Status,
-    arrayToSorted,
-    getAuctionStatus,
-    stringExistsAndMatchesOne,
-    tokenMap,
-} from '~/utils'
+import type { AuctionEventType, SortableHeader, Sorting } from '~/types'
+import { Status, arrayToSorted, stringExistsAndMatchesOne } from '~/utils'
 import { useStoreState } from '~/store'
-import { useGetAuctions } from './useAuctions'
+import { useAuctionEvents } from './useAuctions'
 
 const headers: SortableHeader[] = [
     { label: 'Auction' },
@@ -44,87 +35,58 @@ export function useAuctionsData() {
     const { address } = useAccount()
 
     const {
-        auctionModel: { auctionsData },
         connectWalletModel: { proxyAddress },
     } = useStoreState((state) => state)
 
     const [filterMyBids, setFilterMyBids] = useState(false)
-    const [typeFilter, setTypeFilter] = useState<AuctionEventType>()
+    const [typeFilter, setTypeFilter] = useState<AuctionEventType | undefined>()
     const [statusFilter, setStatusFilter] = useState<Status>()
     const [saleAssetsFilter, setSaleAssetsFilter] = useState<string>()
 
-    const collateralAuctions = useGetAuctions('COLLATERAL', saleAssetsFilter)
-    const debtAuctions = useGetAuctions('DEBT')
-    const surplusAuctions = useGetAuctions('SURPLUS')
+    const { surplus, debt, collateral } = useAuctionEvents(typeFilter, saleAssetsFilter)
 
-    const auctions = useMemo(() => {
-        let temp: IAuction[] = []
-        let tokenFilter = saleAssetsFilter
-        switch (typeFilter) {
-            case 'COLLATERAL': {
-                temp = [...collateralAuctions]
-                break
+    const combined = useMemo(() => {
+        if (typeFilter === 'COLLATERAL' || saleAssetsFilter !== undefined) {
+            return {
+                isLoading: collateral.isLoading,
+                auctions: collateral.data,
+                error: collateral.error,
             }
-            case 'DEBT': {
-                temp = [...debtAuctions]
-                // don't filter by sale asset as all debt auctions are selling KITE
-                tokenFilter = undefined
-                break
+        } else if (typeFilter === 'DEBT') {
+            return {
+                isLoading: debt.isLoading,
+                auctions: debt.data,
+                error: debt.error,
             }
-            case 'SURPLUS': {
-                temp = [...surplusAuctions]
-                // don't filter by sale asset as all surplus auctions are selling HAI
-                tokenFilter = undefined
-                break
+        } else if (typeFilter === 'SURPLUS') {
+            return {
+                isLoading: surplus.isLoading,
+                auctions: surplus.data,
+                error: surplus.error,
             }
-            default: {
-                temp = [...collateralAuctions, ...debtAuctions, ...surplusAuctions]
-                break
+        } else {
+            const errors = [surplus.error, debt.error, collateral.error].filter((e) => e !== null)
+
+            return {
+                isLoading: surplus.isLoading || debt.isLoading || collateral.isLoading,
+                auctions: [
+                    ...(saleAssetsFilter ? [] : surplus.data ?? []),
+                    ...(saleAssetsFilter ? [] : debt.data ?? []),
+                    ...(collateral.data ?? []),
+                ],
+                error: errors.length > 0 ? new AggregateError(errors) : undefined,
             }
         }
-        if (tokenFilter) {
-            temp = temp.filter(({ sellToken }) => {
-                const parsedSellToken = tokenMap[sellToken] || sellToken
-                if (saleAssetsFilter !== parsedSellToken) return false
-                return true
-            })
-        }
-        if (statusFilter) {
-            temp = temp.filter((auction) => statusFilter === getAuctionStatus(auction, auctionsData))
-        }
-        return temp
-    }, [auctionsData, collateralAuctions, debtAuctions, surplusAuctions, typeFilter, saleAssetsFilter, statusFilter])
+    }, [typeFilter, saleAssetsFilter, collateral, debt, surplus])
 
     const [sorting, setSorting] = useState<Sorting>({
         key: 'Status',
         dir: 'desc',
     })
 
-    const { data } = useQuery<{ englishAuctions: QueryAuctionRestarts[] }>(AUCTION_RESTART_QUERY)
-
-    const restarts = useMemo(() => {
-        if (!data) return {}
-
-        return data.englishAuctions.reduce(
-            (obj, { auctionId, englishAuctionType, auctionRestartHashes, auctionRestartTimestamps }) => {
-                const type =
-                    englishAuctionType === 'LIQUIDATION' || englishAuctionType === 'STAKED_TOKEN'
-                        ? 'COLLATERAL'
-                        : englishAuctionType
-                obj[`${type}-${auctionId}`] = auctionRestartHashes.map((hash, i) => ({
-                    hash,
-                    timestamp: auctionRestartTimestamps[i],
-                }))
-                return obj
-            },
-            {} as Record<string, { hash: string; timestamp: string }[]>
-        )
-    }, [data])
-
     const auctionsWithExtras = useMemo(() => {
-        if (!address) return auctions
-
-        const withBids = auctions.map((auction) => {
+        if (combined.isLoading) return []
+        const withBids = combined.auctions!.map((auction) => {
             return {
                 ...auction,
                 myBids: auction.biddersList.reduce((hashes, { bidder, createdAtTransaction }) => {
@@ -133,12 +95,10 @@ export function useAuctionsData() {
                     }
                     return hashes
                 }, [] as string[]).length,
-                status: getAuctionStatus(auction, auctionsData),
-                restarts: restarts[`${auction.englishAuctionType}-${auction.auctionId}`] || [],
             }
         })
         return filterMyBids ? withBids.filter(({ myBids }) => !!myBids) : withBids
-    }, [auctions, auctionsData, address, proxyAddress, filterMyBids, restarts])
+    }, [filterMyBids, address, proxyAddress, combined])
 
     const sortedRows = useMemo(() => {
         switch (sorting.key) {
@@ -195,9 +155,11 @@ export function useAuctionsData() {
     }, [auctionsWithExtras, sorting])
 
     return {
+        isLoading: combined.isLoading,
+        error: combined.error,
         headers,
-        rows: sortedRows,
-        rowsUnmodified: auctions,
+        rows: sortedRows.filter(({ status }) => statusFilter === undefined || statusFilter === status),
+        rowsUnmodified: combined.auctions,
         sorting,
         setSorting,
         filterMyBids,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import type { IAuction, SetState, SortableHeader, Sorting } from '~/types'
 import { tokenMap } from '~/utils'
@@ -22,6 +22,7 @@ type AuctionTableProps = {
     isLoading: boolean
     error?: string
 }
+
 export function AuctionTable({ headers, rows, sorting, setSorting, isLoading, error }: AuctionTableProps) {
     const {
         auctionModel: { selectedAuction },
@@ -51,16 +52,6 @@ export function AuctionTable({ headers, rows, sorting, setSorting, isLoading, er
 
     const [expandedId, setExpandedId] = useState<string>()
 
-    const [paging, setPaging] = useState<number>(0)
-    const pagingRef = useRef(paging)
-    pagingRef.current = paging
-
-    useEffect(() => {
-        if (!rows.length) return setPaging(0)
-        if (pagingRef.current * ITEMS_PER_PAGE < rows.length) return
-        setPaging(Math.ceil(rows.length / ITEMS_PER_PAGE) - 1)
-    }, [rows.length])
-
     return (
         <>
             {!!selectedAuction && (
@@ -84,7 +75,7 @@ export function AuctionTable({ headers, rows, sorting, setSorting, isLoading, er
                 error={error}
                 isEmpty={!rows.length}
                 compactQuery="upToMedium"
-                rows={rows.slice(paging * ITEMS_PER_PAGE, (paging + 1) * ITEMS_PER_PAGE).map((auction) => {
+                rows={rows.map((auction) => {
                     const key = `${auction.englishAuctionType}-${auction.sellToken}-${auction.auctionId}`
                     return (
                         <AuctionTableRow
@@ -101,7 +92,11 @@ export function AuctionTable({ headers, rows, sorting, setSorting, isLoading, er
                 })}
                 footer={
                     <Footer $bordered={rows.length > ITEMS_PER_PAGE}>
-                        <Pagination totalItems={rows.length} perPage={ITEMS_PER_PAGE} handlePagingMargin={setPaging} />
+                        <Pagination
+                            totalItems={rows.length}
+                            perPage={ITEMS_PER_PAGE}
+                            handlePagingMargin={(page) => console.log('paged', page)}
+                        />
                     </Footer>
                 }
             />

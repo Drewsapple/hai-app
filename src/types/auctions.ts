@@ -37,9 +37,9 @@ export type IAuction = {
     sellInitialAmount: string
     sellToken: string
     winner: string
+    status: Status
     tokenSymbol?: string
     myBids?: number
-    status?: Status
 }
 
 export type IAuctionBid = {
