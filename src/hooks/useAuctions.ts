@@ -305,6 +305,10 @@ export function useAuctionEvents<AuctionType extends AuctionEventType>(
                     ({ eventName, args: settledArgs, address: settledAddress }) =>
                         eventName === 'SettleAuction' && settledArgs._id === args._id && address === settledAddress
                 )
+
+                const isClaimed = settlement !== undefined
+                const auctionDeadline = settlement?.args._blockTimestamp.toString() ?? ''
+
                 const auctioneer = args._auctioneer
                 const amountToSell = args._amountToSell.toString()
                 const amountToRaise = args._amountToRaise.toString()
@@ -359,7 +363,7 @@ export function useAuctionEvents<AuctionType extends AuctionEventType>(
                     // initialBid: args._amountToRaise.toString(),
                     // amountToRaise,
                     // amountToRaiseE18: utils.decimalShift(BigNumber.from(amountToRaise), floatsTypes.WAD - floatsTypes.RAD),
-                    isClaimed: settlement !== undefined,
+                    isClaimed,
                     biddersList: initialBids,
                     sellAmount: formatEther(raised),
                     buyAmount: formatEther(collateralBought),
@@ -381,7 +385,7 @@ export function useAuctionEvents<AuctionType extends AuctionEventType>(
                         ({ collateralAuctionHouse }) => address.toLowerCase() === collateralAuctionHouse.toLowerCase()
                     )!.symbol,
                     buyToken: 'HAI',
-                    auctionDeadline: '',
+                    auctionDeadline,
                     winner: '',
                 } as const
 

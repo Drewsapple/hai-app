@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import ReactPaginate from 'react-paginate'
 
 import styled from 'styled-components'
@@ -16,8 +16,15 @@ export function Pagination({ totalItems, handlePagingMargin, perPage = 5 }: Prop
 
         return Math.ceil(totalItems / perPage)
     }, [totalItems, perPage])
+    const [oldTotalItems, setOldTotalItems] = useState(totalItems)
 
     if (totalItems <= perPage) return null
+
+    // if the list changes size, go back to page 0
+    if (oldTotalItems !== totalItems) {
+        handlePagingMargin(0)
+        setOldTotalItems(totalItems)
+    }
 
     return (
         <PaginationContainer>

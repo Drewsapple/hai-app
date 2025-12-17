@@ -50,7 +50,7 @@ export function AuctionTable({ headers, rows, sorting, setSorting, isLoading, er
         })
     }, [selectedAuction, popupsActions])
 
-    const [expandedId, setExpandedId] = useState<string>()
+    const [page, setPage] = useState<number>(0)
 
     return (
         <>
@@ -75,28 +75,13 @@ export function AuctionTable({ headers, rows, sorting, setSorting, isLoading, er
                 error={error}
                 isEmpty={!rows.length}
                 compactQuery="upToMedium"
-                rows={rows.map((auction) => {
+                rows={rows.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE).map((auction) => {
                     const key = `${auction.englishAuctionType}-${auction.sellToken}-${auction.auctionId}`
-                    return (
-                        <AuctionTableRow
-                            key={key}
-                            headers={headers}
-                            auction={auction}
-                            container={TableRow}
-                            expanded={expandedId === key}
-                            onSelect={() => {
-                                setExpandedId((currentId) => (currentId === key ? undefined : key))
-                            }}
-                        />
-                    )
+                    return <AuctionTableRow key={key} headers={headers} auction={auction} container={TableRow} />
                 })}
                 footer={
                     <Footer $bordered={rows.length > ITEMS_PER_PAGE}>
-                        <Pagination
-                            totalItems={rows.length}
-                            perPage={ITEMS_PER_PAGE}
-                            handlePagingMargin={(page) => console.log('paged', page)}
-                        />
+                        <Pagination totalItems={rows.length} perPage={ITEMS_PER_PAGE} handlePagingMargin={setPage} />
                     </Footer>
                 }
             />
@@ -117,7 +102,7 @@ const TableHeader = styled(Grid)`
 `
 
 const TableRow = styled(TableHeader)`
-    height: 55px;
+    min-height: 55px;
     cursor: pointer;
 
     ${({ theme }) => theme.mediaWidth.upToMedium`

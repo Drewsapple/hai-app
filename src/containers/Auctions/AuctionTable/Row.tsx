@@ -1,4 +1,4 @@
-import { type ComponentType, useState } from 'react'
+import { type ComponentType, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { IAuction, SortableHeader } from '~/types'
@@ -19,11 +19,11 @@ type AuctionTableRowProps = {
     headers: SortableHeader[]
     auction: IAuction & { myBids?: number }
     container: ComponentType
-    expanded: boolean
-    onSelect?: () => void
 }
-export function AuctionTableRow({ headers, auction, container, expanded, onSelect }: AuctionTableRowProps) {
+export function AuctionTableRow({ headers, auction, container }: AuctionTableRowProps) {
     const { t } = useTranslation()
+
+    const [expanded, setExpanded] = useState(false)
 
     const {
         connectWalletModel: { proxyAddress },
@@ -131,7 +131,7 @@ export function AuctionTableRow({ headers, auction, container, expanded, onSelec
     })()
 
     return (
-        <TableRowContainer onClick={onSelect} $expanded={expanded}>
+        <TableRowContainer onClick={() => setExpanded((expanded) => !expanded)}>
             <TableRow
                 container={container}
                 headers={headers}
@@ -237,12 +237,18 @@ export function AuctionTableRow({ headers, auction, container, expanded, onSelec
                     },
                 ]}
             />
-            <TableRowBody onClick={(e: any) => e.stopPropagation()}>
-                <BidTable auction={auction} />
-            </TableRowBody>
-            <TableRowFooter>
-                <ProxyPrompt continueText="interact with this auction">{button}</ProxyPrompt>
-            </TableRowFooter>
+            {expanded ? (
+                <>
+                    <TableRowBody onClick={(e: any) => e.stopPropagation()}>
+                        <BidTable auction={auction} />
+                    </TableRowBody>
+                    <TableRowFooter onClick={(e: any) => e.stopPropagation()}>
+                        <ProxyPrompt continueText="interact with this auction">{button}</ProxyPrompt>
+                    </TableRowFooter>
+                </>
+            ) : (
+                <></>
+            )}
         </TableRowContainer>
     )
 }
@@ -253,16 +259,16 @@ const TableRowContainer = styled(Flex).attrs((props) => ({
     $justify: 'stretch',
     $align: 'stretch',
     ...props,
-}))<{ $expanded?: boolean }>`
+}))`
     font-size: 1.1rem;
     transition: height 0.5s ease;
-    height: ${({ $expanded }) => ($expanded ? 360 : 56)}px;
+    height: 100%;
     border-radius: 18px;
     border: 2px solid rgba(0, 0, 0, 0.1);
     overflow: hidden;
 
-    ${({ theme, $expanded }) => theme.mediaWidth.upToMedium`
-        height: ${$expanded ? 652 : 312}px;
+    ${({ theme }) => theme.mediaWidth.upToMedium`
+        height: 100%;
         border-radius: 0px;
         border: none;
         &:not(:first-child) {

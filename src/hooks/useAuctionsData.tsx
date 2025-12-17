@@ -65,14 +65,14 @@ export function useAuctionsData() {
                 error: surplus.error,
             }
         } else {
-            const errors = [surplus.error, debt.error, collateral.error].filter((e) => e !== null)
+            const errors = [collateral.error, surplus.error, debt.error].filter((e) => e !== null)
 
             return {
                 isLoading: surplus.isLoading || debt.isLoading || collateral.isLoading,
                 auctions: [
+                    ...(collateral.data ?? []),
                     ...(saleAssetsFilter ? [] : surplus.data ?? []),
                     ...(saleAssetsFilter ? [] : debt.data ?? []),
-                    ...(collateral.data ?? []),
                 ],
                 error: errors.length > 0 ? new AggregateError(errors) : undefined,
             }
@@ -81,7 +81,7 @@ export function useAuctionsData() {
 
     const [sorting, setSorting] = useState<Sorting>({
         key: 'Status',
-        dir: 'desc',
+        dir: 'asc',
     })
 
     const auctionsWithExtras = useMemo(() => {
