@@ -25,7 +25,7 @@ export function BrandedDropdown({ width, label, children, maxHeight, innerPaddin
     useOutsideClick(container, () => setExpanded(false))
 
     return (
-        <Container as="div" ref={setContainer} {...props} onClick={() => setExpanded((e) => !e)}>
+        <Container as="div" ref={setContainer} {...props} onClick={() => setExpanded((e) => !e)} $variant={'noblur'}>
             {label}
             <IconContainer $rotate={expanded}>
                 <Caret direction="down" />
@@ -48,7 +48,6 @@ BrandedDropdown.Item = DropdownItem
 const Container = styled(HaiButton)`
     position: relative;
     height: 48px;
-    z-index: 1;
 `
 
 const IconContainer = styled(CenteredFlex)<{ $rotate?: boolean }>`
