@@ -9,21 +9,8 @@ import {
     fetchCollateralAuctionData,
 } from '@hai-on-op/sdk'
 
-import type { IAuctionBid, IAuction, AuctionEventType, LoadingAuctionsData } from '~/types/auctions'
-import {
-    type IAuctionBuy,
-    type IClaimInternalBalance,
-    formatSurplusAndDebtAuctions,
-    formatCollateralAuctions,
-    getCollateralAuctions,
-    getDebtAuctions,
-    getSurplusAuctions,
-    handleAuctionBid,
-    handleAuctionBuy,
-    handleAuctionClaim,
-    handleClaimInternalBalance,
-} from '~/utils/auctions'
-import { COLLATERAL_BATCH_SIZE, DEBT_BATCH_SIZE, SURPLUS_BATCH_SIZE, ActionState } from '~/utils/constants'
+import type { IAuction, AuctionEventType, LoadingAuctionsData } from '~/types/auctions'
+import { COLLATERAL_BATCH_SIZE, DEBT_BATCH_SIZE, SURPLUS_BATCH_SIZE } from '~/utils/constants'
 import { type StoreModel } from './index'
 
 export interface AuctionModel {
@@ -88,104 +75,13 @@ export interface AuctionModel {
 
     collateralAmount: string
     setCollateralAmount: Action<AuctionModel, string>
-
-    // operation: number
-    // setOperation: Action<AuctionModel, number>
-
-    auctionBid: Thunk<AuctionModel, IAuctionBid, any, StoreModel>
-    auctionClaimInternalBalance: Thunk<AuctionModel, IClaimInternalBalance, any, StoreModel>
-    auctionClaim: Thunk<AuctionModel, IAuctionBid, any, StoreModel>
-
-    auctionBuy: Thunk<AuctionModel, IAuctionBuy, any, StoreModel>
-
-    isSubmitting: boolean
-    setIsSubmitting: Action<AuctionModel, boolean>
 }
 
 export const auctionModel: AuctionModel = {
-    fetchAuctions: thunk(
-        async (
-            actions,
-            { geb, type, tokenSymbol, startBlock, loadedAuctions = [], loadingAuctionsData = {}, userProxy = '' }
-        ) => {
-            const latestBlock = startBlock || (await geb.provider.getBlockNumber())
-            actions.setLoadingAuctionsData({
-                ...loadingAuctionsData,
-                loading: true,
-            })
-            if (type === 'SURPLUS') {
-                const { auctions, endBlock } = await getSurplusAuctions(
-                    geb,
-                    latestBlock - SURPLUS_BATCH_SIZE,
-                    latestBlock
-                )
-                const surplusAuctions = auctions.reverse().map((auction) => {
-                    return {
-                        ...auction,
-                        englishAuctionType: 'SURPLUS',
-                        sellToken: 'COIN',
-                        buyToken: 'PROTOCOL_TOKEN',
-                    }
-                })
-                if (surplusAuctions) {
-                    const formattedAuctions = formatSurplusAndDebtAuctions(surplusAuctions, userProxy)
-                    actions.setSurplusAuctions([...loadedAuctions, ...formattedAuctions])
-                    actions.setLoadingAuctionsData({
-                        surplusStartBlock: endBlock,
-                        loading: false,
-                    })
-                }
-            } else if (type === 'DEBT') {
-                const { auctions, endBlock } = await getDebtAuctions(geb, latestBlock - DEBT_BATCH_SIZE, latestBlock)
-                const debtAuctions = auctions.reverse().map((auction) => {
-                    return {
-                        ...auction,
-                        englishAuctionType: 'DEBT',
-                        sellToken: 'PROTOCOL_TOKEN',
-                        buyToken: 'COIN',
-                    }
-                })
-                if (debtAuctions) {
-                    const formattedAuctions = formatSurplusAndDebtAuctions(debtAuctions, userProxy)
-                    actions.setDebtAuctions([...loadedAuctions, ...formattedAuctions])
-                    actions.setLoadingAuctionsData({
-                        debtStartBlock: endBlock,
-                        loading: false,
-                    })
-                }
-            } else if (type === 'COLLATERAL') {
-                const { auctions, endBlock } = await getCollateralAuctions(
-                    geb,
-                    tokenSymbol || 'WETH',
-                    latestBlock - COLLATERAL_BATCH_SIZE,
-                    latestBlock
-                )
-
-                const collateralAuctions = auctions.reverse().map((auction) => {
-                    return {
-                        ...auction,
-                        englishAuctionType: 'COLLATERAL',
-                        sellToken: 'PROTOCOL_TOKEN',
-                        buyToken: 'COIN',
-                        tokenSymbol: tokenSymbol,
-                        auctionDeadline: '1699122709',
-                    }
-                })
-                if (collateralAuctions && tokenSymbol) {
-                    const formmatedAuctions = formatCollateralAuctions(collateralAuctions, tokenSymbol)
-                    actions.setCollateralAuctions({
-                        collateral: tokenSymbol,
-                        auctions: [...loadedAuctions, ...formmatedAuctions],
-                    })
-                    actions.setLoadingAuctionsData({
-                        ...actions.loadingAuctionsData,
-                        collateralStartBlock: endBlock,
-                        loading: false,
-                    })
-                }
-            }
-        }
-    ),
+    fetchAuctions: thunk(async (actions) => {
+        actions.setLoadingAuctionsData({ loading: true })
+        actions.setLoadingAuctionsData({ loading: false })
+    }),
 
     auctionsData: null,
     setAuctionsData: action((state, payload) => {
@@ -246,118 +142,8 @@ export const auctionModel: AuctionModel = {
         state.amount = payload
     }),
 
-    // operation: 0,
-    // setOperation: action((state, payload) => {
-    //     state.operation = payload
-    // }),
-
     collateralAmount: '',
     setCollateralAmount: action((state, payload) => {
         state.collateralAmount = payload
-    }),
-
-    auctionBid: thunk(async (actions, payload, { getStoreActions }) => {
-        const storeActions = getStoreActions()
-        const txResponse = await handleAuctionBid(payload)
-        if (txResponse) {
-            actions.setIsSubmitting(true)
-            const { hash, chainId } = txResponse
-            storeActions.transactionsModel.addTransaction({
-                chainId,
-                hash,
-                from: txResponse.from,
-                summary: payload.title,
-                addedTime: new Date().getTime(),
-                originalTx: txResponse,
-            })
-            storeActions.popupsModel.setIsWaitingModalOpen(true)
-            storeActions.popupsModel.setWaitingPayload({
-                title: 'Transaction Submitted',
-                hash: txResponse.hash,
-                status: ActionState.SUCCESS,
-            })
-            await txResponse.wait()
-            actions.setIsSubmitting(false)
-        }
-    }),
-
-    auctionBuy: thunk(async (actions, payload, { getStoreActions }) => {
-        const storeActions = getStoreActions()
-        const txResponse = await handleAuctionBuy(payload)
-        if (txResponse) {
-            actions.setIsSubmitting(true)
-            const { hash, chainId } = txResponse
-            storeActions.transactionsModel.addTransaction({
-                chainId,
-                hash,
-                from: txResponse.from,
-                summary: payload.title,
-                addedTime: new Date().getTime(),
-                originalTx: txResponse,
-            })
-            storeActions.popupsModel.setIsWaitingModalOpen(true)
-            storeActions.popupsModel.setWaitingPayload({
-                title: 'Transaction Submitted',
-                hash: txResponse.hash,
-                status: ActionState.SUCCESS,
-            })
-            await txResponse.wait()
-            actions.setIsSubmitting(false)
-        }
-    }),
-
-    auctionClaim: thunk(async (actions, payload, { getStoreActions }) => {
-        const storeActions = getStoreActions()
-        const txResponse = await handleAuctionClaim(payload)
-        if (txResponse) {
-            actions.setIsSubmitting(true)
-            const { hash, chainId } = txResponse
-            storeActions.transactionsModel.addTransaction({
-                chainId,
-                hash,
-                from: txResponse.from,
-                summary: payload.title,
-                addedTime: new Date().getTime(),
-                originalTx: txResponse,
-            })
-            storeActions.popupsModel.setIsWaitingModalOpen(true)
-            storeActions.popupsModel.setWaitingPayload({
-                title: 'Transaction Submitted',
-                hash: txResponse.hash,
-                status: ActionState.SUCCESS,
-            })
-            await txResponse.wait()
-            actions.setIsSubmitting(false)
-        }
-    }),
-
-    auctionClaimInternalBalance: thunk(async (actions, payload, { getStoreActions }) => {
-        const storeActions = getStoreActions()
-        const txResponse = await handleClaimInternalBalance(payload)
-        if (txResponse) {
-            actions.setIsSubmitting(true)
-            const { hash, chainId } = txResponse
-            storeActions.transactionsModel.addTransaction({
-                chainId,
-                hash,
-                from: txResponse.from,
-                summary: payload.title,
-                addedTime: new Date().getTime(),
-                originalTx: txResponse,
-            })
-            storeActions.popupsModel.setIsWaitingModalOpen(true)
-            storeActions.popupsModel.setWaitingPayload({
-                title: 'Transaction Submitted',
-                hash: txResponse.hash,
-                status: ActionState.SUCCESS,
-            })
-            await txResponse.wait()
-            actions.setIsSubmitting(false)
-        }
-    }),
-
-    isSubmitting: false,
-    setIsSubmitting: action((state, payload) => {
-        state.isSubmitting = payload
     }),
 }
