@@ -24,6 +24,7 @@ export function useInternalBalances() {
             HAI: formatSummaryCurrency(haiBalance, liquidationData?.currentRedemptionPrice || '1'),
             KITE: formatSummaryCurrency(kiteBalance, prices?.KITE.raw || '0'),
         }
+
         return {
             ...balances,
             refetch: geb && proxyAddress ? () => auctionActions.fetchAuctionsData({ geb, proxyAddress }) : undefined,

@@ -27,12 +27,6 @@ import { COLLATERAL_BATCH_SIZE, DEBT_BATCH_SIZE, SURPLUS_BATCH_SIZE, ActionState
 import { type StoreModel } from './index'
 
 export interface AuctionModel {
-    surplusAuctions: IAuction[] | undefined
-    setSurplusAuctions: Action<AuctionModel, IAuction[] | undefined>
-    debtAuctions: IAuction[] | undefined
-    setDebtAuctions: Action<AuctionModel, IAuction[] | undefined>
-    collateralAuctions: { [key: string]: ICollateralAuction[] }
-    setCollateralAuctions: Action<AuctionModel, { collateral: string; auctions: ICollateralAuction[] }>
     fetchAuctions: Thunk<
         AuctionModel,
         {
@@ -109,18 +103,6 @@ export interface AuctionModel {
 }
 
 export const auctionModel: AuctionModel = {
-    surplusAuctions: undefined,
-    setSurplusAuctions: action((state, payload) => {
-        state.surplusAuctions = payload
-    }),
-    debtAuctions: undefined,
-    setDebtAuctions: action((state, payload) => {
-        state.debtAuctions = payload
-    }),
-    collateralAuctions: {},
-    setCollateralAuctions: action((state, { collateral, auctions }) => {
-        state.collateralAuctions = { ...state.collateralAuctions, [collateral]: auctions }
-    }),
     fetchAuctions: thunk(
         async (
             actions,

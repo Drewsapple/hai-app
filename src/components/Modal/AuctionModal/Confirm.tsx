@@ -6,6 +6,7 @@ import { ActionState, COIN_TICKER, formatNumberWithStyle, tokenMap, wait } from 
 import { useStoreActions, useStoreState } from '~/store'
 import { useClaims } from '~/providers/ClaimsProvider'
 import { handleTransactionError, useEthersSigner, usePublicGeb } from '~/hooks'
+import { useAuctionMutations } from '~/hooks/auctions'
 
 import { ModalBody, ModalFooter } from '../index'
 import { CenteredFlex, HaiButton } from '~/styles'
@@ -37,6 +38,8 @@ export function Confirm({ previousStep }: ConfirmProps) {
     const { auctionModel: auctionActions, popupsModel: popupsActions } = useStoreActions((actions) => actions)
 
     const { activeAuctions } = useClaims()
+
+    const { auctionBid, auctionBuy, auctionClaim, auctionClaimInternalBalance } = useAuctionMutations()
 
     const [status, setStatus] = useState<ActionState>(ActionState.NONE)
 
@@ -152,7 +155,7 @@ export function Confirm({ previousStep }: ConfirmProps) {
 
             switch (actionType) {
                 case ActionType.BUY: {
-                    await auctionActions.auctionBuy({
+                    await auctionBuy.mutateAsync({
                         signer,
                         auctionId,
                         title,
@@ -163,7 +166,7 @@ export function Confirm({ previousStep }: ConfirmProps) {
                     break
                 }
                 case ActionType.SETTLE: {
-                    await auctionActions.auctionClaim({
+                    await auctionClaim.mutateAsync({
                         signer,
                         auctionId,
                         title,
@@ -172,7 +175,7 @@ export function Confirm({ previousStep }: ConfirmProps) {
                     break
                 }
                 case ActionType.CLAIM: {
-                    await auctionActions.auctionClaimInternalBalance({
+                    await auctionClaimInternalBalance.mutateAsync({
                         signer,
                         auctionId,
                         title,
@@ -183,7 +186,7 @@ export function Confirm({ previousStep }: ConfirmProps) {
                     break
                 }
                 case ActionType.BID: {
-                    await auctionActions.auctionBid({
+                    await auctionBid.mutateAsync({
                         signer,
                         auctionId,
                         title,
@@ -257,7 +260,16 @@ export function Confirm({ previousStep }: ConfirmProps) {
                     $width="100%"
                     $justify="center"
                     $variant="yellowish"
-                    disabled={status === ActionState.LOADING || !account || !signer || !auctionState.selectedAuction}
+                    disabled={
+                        status === ActionState.LOADING ||
+                        auctionBid.status === 'loading' ||
+                        auctionBuy.status === 'loading' ||
+                        auctionClaim.status === 'loading' ||
+                        auctionClaimInternalBalance.status === 'loading' ||
+                        !account ||
+                        !signer ||
+                        !auctionState.selectedAuction
+                    }
                     onClick={handleConfirm}
                 >
                     {status === ActionState.ERROR ? 'Try Again' : t('confirm_transaction')}
