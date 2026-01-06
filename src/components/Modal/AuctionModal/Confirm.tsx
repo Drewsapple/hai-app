@@ -6,7 +6,7 @@ import { ActionState, COIN_TICKER, formatNumberWithStyle, tokenMap, wait } from 
 import { useStoreActions, useStoreState } from '~/store'
 import { useClaims } from '~/providers/ClaimsProvider'
 import { handleTransactionError, useEthersSigner, usePublicGeb } from '~/hooks'
-import { useAuctionMutations } from '~/hooks/auctions'
+import { useAuctionMutations } from '~/hooks/auctions/useAuctionMutations'
 
 import { ModalBody, ModalFooter } from '../index'
 import { CenteredFlex, HaiButton } from '~/styles'
