@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BigNumber } from 'ethers'
 import { formatEther } from 'ethers/lib/utils'
-import { radToFixed, wadToFixed } from '@hai-on-op/sdk'
+import { fetchAuctionData, radToFixed, wadToFixed } from '@hai-on-op/sdk'
 import { useAccount, useBlockNumber, useContractRead, usePublicClient } from 'wagmi'
-import { getAbiItem, type Address } from 'viem'
+import { getAbiItem, zeroAddress, type Address } from 'viem'
 
 import type { AuctionEventType, IAuction, IAuctionBid } from '~/types'
 import { ActionState, formatSurplusAndDebtAuctions, getAuctionStatus, Status } from '~/utils'
 import { useStoreActions, useStoreState } from '~/store'
 import { usePublicGeb, useGeb } from './useGeb'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import IDebtAuctionHouse from '~/abis/IDebtAuctionHouse'
 import ISurplusAuctionHouse from '~/abis/ISurplusAuctionHouse'
 import ICollateralAuctionHouse from '~/abis/ICollateralAuctionHouse'
@@ -50,7 +50,7 @@ export function useAuctionEvents<AuctionType extends AuctionEventType>(
     })
 
     const surplusRaw = useInfiniteQuery({
-        queryKey: ['surplusAuctionStarts'],
+        queryKey: ['surplusAuctionEvents'],
         queryFn: async ({ pageParam: { fromBlock, toBlock } = initialPageParam }: { pageParam?: PageParam }) => {
             const data = await publicClient.getLogs({
                 address: geb.contracts.surplusAuctionHouse.address as Address,
@@ -147,7 +147,7 @@ export function useAuctionEvents<AuctionType extends AuctionEventType>(
     }, [surplusRaw, surplusParams])
 
     const debtRaw = useInfiniteQuery({
-        queryKey: ['debtAuctionStarts'],
+        queryKey: ['debtAuctionEvents'],
         queryFn: async ({ pageParam: { fromBlock, toBlock } = initialPageParam }: { pageParam?: PageParam }) => {
             const data = await publicClient.getLogs({
                 address: geb.contracts.debtAuctionHouse.address as Address,
@@ -256,7 +256,7 @@ export function useAuctionEvents<AuctionType extends AuctionEventType>(
     )
 
     const collateralRaw = useInfiniteQuery({
-        queryKey: ['collateralAuctionStarts', tokenSymbol],
+        queryKey: ['collateralAuctionEvents', tokenSymbol],
         queryFn: async ({ pageParam: { fromBlock, toBlock } = initialPageParam }: { pageParam?: PageParam }) => {
             const data = await publicClient.getLogs({
                 address: collateralAuctionHouses.map(({ collateralAuctionHouse }) => collateralAuctionHouse),
@@ -409,89 +409,91 @@ export function useAuctionEvents<AuctionType extends AuctionEventType>(
     }
 }
 
+export function useAccountingEngineData() {
+    const geb = useGeb()
+    const query = useQuery({
+        queryKey: ['fetchAuctionData'],
+        queryFn: async () => (await fetchAuctionData(geb, zeroAddress)).accountingEngineData, // using zero address so that virtual contract remains unchanged
+        refetchOnWindowFocus: false,
+    })
+
+    return query
+}
+
 // start surplus auction
 export function useStartAuction() {
-    const {
-        auctionModel: { auctionsData },
-    } = useStoreState((state) => state)
-    const {
-        auctionModel: auctionActions,
-        popupsModel: popupsActions,
-        transactionsModel: transactionsActions,
-    } = useStoreActions((actions) => actions)
+    const { popupsModel: popupsActions, transactionsModel: transactionsActions } = useStoreActions((actions) => actions)
 
     const { address: account } = useAccount()
     const geb = useGeb()
 
-    const [data, setData] = useState({
-        systemSurplus: '',
-        systemDebt: '',
-        surplusRequiredToAuction: {
-            total: '',
-            remaining: '',
-        },
-        debtRequiredToAuction: '',
-        surplusAmountToSell: '',
-        debtAmountToSell: '',
-        protocolTokensOffered: '',
-    })
+    const { data: accountingEngineData } = useAccountingEngineData()
 
-    useEffect(() => {
-        if (!auctionsData) return
+    const data = useMemo(() => {
+        if (!accountingEngineData)
+            return {
+                systemSurplus: '',
+                systemDebt: '',
+                surplusRequiredToAuction: {
+                    total: '',
+                    remaining: '',
+                },
+                debtRequiredToAuction: '',
+                surplusAmountToSell: '',
+                debtAmountToSell: '',
+                protocolTokensOffered: '',
+                surplusCooldownDone: false,
+            }
+        else {
+            const { coinBalance, debtBalance, unqueuedUnauctionedDebt, accountingEngineParams } = accountingEngineData
+            const {
+                surplusAmount,
+                surplusBuffer,
+                debtAuctionBidSize: debtAmountToSell,
+                debtAuctionMintedTokens: protocolTokensOffered,
+            } = accountingEngineParams
 
-        const { coinBalance, debtBalance, unqueuedUnauctionedDebt, accountingEngineParams } =
-            auctionsData.accountingEngineData || {}
-        const {
-            surplusAmount,
-            surplusBuffer,
-            debtAuctionBidSize: debtAmountToSell,
-            debtAuctionMintedTokens: protocolTokensOffered,
-        } = accountingEngineParams
+            const systemSurplus = coinBalance.sub(debtBalance)
+            const systemDebt = unqueuedUnauctionedDebt.sub(coinBalance)
 
-        const systemSurplus = coinBalance.sub(debtBalance)
-        const systemDebt = unqueuedUnauctionedDebt.sub(coinBalance)
+            const surplusRequiredToAuction = surplusAmount.add(surplusBuffer)
 
-        const surplusRequiredToAuction = surplusAmount.add(surplusBuffer)
+            const debtRequiredToAuction = debtAmountToSell.sub(systemDebt)
+            const {
+                lastSurplusTime,
+                accountingEngineParams: { surplusDelay },
+            } = accountingEngineData
 
-        const debtRequiredToAuction = debtAmountToSell.sub(systemDebt)
-
-        setData({
-            systemSurplus: radToFixed(systemSurplus.lt(0) ? BigNumber.from(0) : systemSurplus).toString(),
-            systemDebt: radToFixed(systemDebt.lt(0) ? BigNumber.from(0) : systemDebt).toString(),
-            surplusRequiredToAuction: {
-                total: radToFixed(surplusRequiredToAuction).toString(),
-                remaining: radToFixed(surplusRequiredToAuction.sub(systemSurplus)).toString(),
-            },
-            debtRequiredToAuction: radToFixed(debtRequiredToAuction).toString(),
-            surplusAmountToSell: radToFixed(surplusAmount).toString(),
-            debtAmountToSell: radToFixed(debtAmountToSell).toString(),
-            protocolTokensOffered: wadToFixed(protocolTokensOffered).toString(),
-        })
-    }, [auctionsData])
-
-    // Check surplus cooldown. Time now > lastSurplusTime + surplusDelay
-    const surplusCooldownDone = useMemo(() => {
-        if (!auctionsData?.accountingEngineData) return false
-
-        const {
-            lastSurplusTime,
-            accountingEngineParams: { surplusDelay },
-        } = auctionsData.accountingEngineData
-        if (!lastSurplusTime || !surplusDelay) return false
-        return new Date() > new Date(lastSurplusTime.add(surplusDelay).mul(1000).toNumber())
-    }, [auctionsData?.accountingEngineData])
+            return {
+                systemSurplus: radToFixed(systemSurplus.lt(0) ? BigNumber.from(0) : systemSurplus).toString(),
+                systemDebt: radToFixed(systemDebt.lt(0) ? BigNumber.from(0) : systemDebt).toString(),
+                surplusRequiredToAuction: {
+                    total: radToFixed(surplusRequiredToAuction).toString(),
+                    remaining: radToFixed(surplusRequiredToAuction.sub(systemSurplus)).toString(),
+                },
+                debtRequiredToAuction: radToFixed(debtRequiredToAuction).toString(),
+                surplusAmountToSell: radToFixed(surplusAmount).toString(),
+                debtAmountToSell: radToFixed(debtAmountToSell).toString(),
+                protocolTokensOffered: wadToFixed(protocolTokensOffered).toString(),
+                // Check surplus cooldown. Time now > lastSurplusTime + surplusDelay
+                surplusCooldownDone: new Date() > new Date(lastSurplusTime.add(surplusDelay).mul(1000).toNumber()),
+            }
+        }
+    }, [accountingEngineData])
 
     // if delta to start surplus auction is negative and cooldown is over we can allow to start surplus auction
     const allowStartSurplusAuction = useMemo(() => {
         if (!data.surplusAmountToSell || !data.surplusRequiredToAuction) return false
-        return data.surplusRequiredToAuction.remaining <= '0' && surplusCooldownDone
-    }, [data.surplusAmountToSell, surplusCooldownDone, data.surplusRequiredToAuction])
+        return data.surplusRequiredToAuction.remaining <= '0' && data.surplusCooldownDone
+    }, [data.surplusAmountToSell, data.surplusCooldownDone, data.surplusRequiredToAuction])
 
     // if delta to start debt auction is negative we can allow to start surplus auction
     const allowStartDebtAuction = useMemo(() => {
         if (!data.debtAmountToSell || !data.debtRequiredToAuction) return false
         return data.debtRequiredToAuction <= '0'
     }, [data.debtAmountToSell, data.debtRequiredToAuction])
+
+    const queryClient = useQueryClient()
 
     const startSurplusAcution = async function () {
         if (!account) throw new Error('No library or account')
@@ -516,13 +518,11 @@ export function useStartAuction() {
             status: ActionState.SUCCESS,
         })
         await txResponse.wait()
-        auctionActions.fetchAuctions({
-            geb,
-            type: 'DEBT',
+        queryClient.invalidateQueries({
+            queryKey: ['surplusAuctionEvents'],
         })
-        auctionActions.fetchAuctions({
-            geb,
-            type: 'SURPLUS',
+        queryClient.invalidateQueries({
+            queryKey: ['debtAuctionEvents'],
         })
         popupsActions.setIsWaitingModalOpen(false)
         popupsActions.setWaitingPayload({ status: ActionState.NONE })
@@ -551,13 +551,11 @@ export function useStartAuction() {
             status: ActionState.SUCCESS,
         })
         await txResponse.wait()
-        auctionActions.fetchAuctions({
-            geb,
-            type: 'DEBT',
+        queryClient.invalidateQueries({
+            queryKey: ['surplusAuctionEvents'],
         })
-        auctionActions.fetchAuctions({
-            geb,
-            type: 'SURPLUS',
+        queryClient.invalidateQueries({
+            queryKey: ['debtAuctionEvents'],
         })
         popupsActions.setIsWaitingModalOpen(false)
         popupsActions.setWaitingPayload({ status: ActionState.NONE })
@@ -569,20 +567,17 @@ export function useStartAuction() {
         ...data,
         allowStartSurplusAuction,
         allowStartDebtAuction,
-        lastSurplusTime: auctionsData?.accountingEngineData.lastSurplusTime,
-        surplusDelay: auctionsData?.accountingEngineData.accountingEngineParams.surplusDelay,
-        surplusCooldownDone,
+        lastSurplusTime: accountingEngineData?.lastSurplusTime,
+        surplusDelay: accountingEngineData?.accountingEngineParams.surplusDelay,
+        surplusCooldownDone: data.surplusCooldownDone,
     }
 }
 
 export function useRestartAuction(auction: IAuction) {
     const { address: account } = useAccount()
+    const queryClient = useQueryClient()
 
-    const {
-        auctionModel: auctionActions,
-        popupsModel: popupsActions,
-        transactionsModel: transactionsActions,
-    } = useStoreActions((actions) => actions)
+    const { popupsModel: popupsActions, transactionsModel: transactionsActions } = useStoreActions((actions) => actions)
 
     const geb = useGeb()
 
@@ -620,13 +615,11 @@ export function useRestartAuction(auction: IAuction) {
             status: ActionState.SUCCESS,
         })
         await txResponse.wait()
-        auctionActions.fetchAuctions({
-            geb,
-            type: 'DEBT',
+        queryClient.invalidateQueries({
+            queryKey: ['surplusAuctionEvents'],
         })
-        auctionActions.fetchAuctions({
-            geb,
-            type: 'SURPLUS',
+        queryClient.invalidateQueries({
+            queryKey: ['debtAuctionEvents'],
         })
         popupsActions.setIsWaitingModalOpen(false)
         popupsActions.setWaitingPayload({ status: ActionState.NONE })
