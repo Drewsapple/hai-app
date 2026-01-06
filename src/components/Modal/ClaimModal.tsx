@@ -10,6 +10,7 @@ import { handleTransactionError, useEthersSigner, useGeb } from '~/hooks'
 import { utils } from 'ethers'
 import { useDistributorContract } from '~/hooks/useContract'
 import { useRewards } from '~/providers/RewardsProvider'
+import { useAuctionMutations } from '~/hooks/auctions/useAuctionMutations'
 
 import styled from 'styled-components'
 import { CenteredFlex, Flex, HaiButton, Text } from '~/styles'
@@ -183,10 +184,11 @@ function ClaimableAsset({
     const { address: account } = useAccount()
 
     const {
-        auctionModel: auctionActions,
         popupsModel: popupsActions,
         transactionsModel: transactionsActions,
     } = useStoreActions((actions) => actions)
+
+    const { auctionClaim, auctionClaimInternalBalance } = useAuctionMutations()
 
     const [status, setStatus] = useState(ActionState.NONE)
 
@@ -240,7 +242,7 @@ function ClaimableAsset({
             })
             try {
                 if (internal) {
-                    await auctionActions.auctionClaimInternalBalance({
+                    await auctionClaimInternalBalance.mutateAsync({
                         signer,
                         auctionId: '1',
                         auctionType: 'COLLATERAL',
@@ -249,7 +251,7 @@ function ClaimableAsset({
                         title: `Claim ${tokenMap[asset]}`,
                     })
                 } else if (auction) {
-                    await auctionActions.auctionClaim({
+                    await auctionClaim.mutateAsync({
                         signer,
                         auctionId: auction.auctionId,
                         title: 'Claim Assets',

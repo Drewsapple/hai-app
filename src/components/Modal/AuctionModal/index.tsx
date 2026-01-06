@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useStoreActions, useStoreState } from '~/store'
+import { useStoreState } from '~/store'
 
 import { Modal, type ModalProps } from '../index'
 import { BrandedTitle } from '~/components/BrandedTitle'
@@ -19,15 +19,16 @@ enum AuctionActionStep {
 export function AuctionModal({ maxWidth = '600px', onClose, ...props }: ModalProps) {
     const { t } = useTranslation()
 
+    const [amount, setAmount] = useState('')
+    const [collateralAmount, setCollateralAmount] = useState('')
+    const [step, setStep] = useState(AuctionActionStep.CONFIGURE)
+
     const {
         auctionModel: { selectedAuction },
         popupsModel: {
             auctionOperationPayload: { isOpen, type },
         },
     } = useStoreState((state) => state)
-    const { auctionModel: auctionActions } = useStoreActions((actions) => actions)
-
-    const [step, setStep] = useState(AuctionActionStep.CONFIGURE)
 
     const content = useMemo(() => {
         if (!selectedAuction) return null
@@ -38,6 +39,10 @@ export function AuctionModal({ maxWidth = '600px', onClose, ...props }: ModalPro
                     <ConfigureAction
                         auction={selectedAuction}
                         action={type}
+                        amount={amount}
+                        collateralAmount={collateralAmount}
+                        setAmount={setAmount}
+                        setCollateralAmount={setCollateralAmount}
                         nextStep={(skip?: boolean) =>
                             setStep(!skip ? AuctionActionStep.APPROVE : AuctionActionStep.CONFIRM)
                         }
@@ -53,18 +58,25 @@ export function AuctionModal({ maxWidth = '600px', onClose, ...props }: ModalPro
                     />
                 )
             case AuctionActionStep.CONFIRM:
-                return <Confirm previousStep={() => setStep(AuctionActionStep.CONFIGURE)} />
+                return (
+                    <Confirm
+                        previousStep={() => setStep(AuctionActionStep.CONFIGURE)}
+                        amount={amount}
+                        collateralAmount={collateralAmount}
+                    />
+                )
         }
-    }, [step, selectedAuction, type])
+    }, [step, selectedAuction, type, amount, collateralAmount])
 
     useEffect(() => {
-        if (isOpen)
+        if (isOpen) {
             return () => {
                 setStep(AuctionActionStep.CONFIGURE)
-                auctionActions.setAmount('')
-                auctionActions.setCollateralAmount('')
+                setAmount('')
+                setCollateralAmount('')
             }
-    }, [isOpen, auctionActions])
+        }
+    }, [isOpen])
 
     if (!isOpen) return null
 

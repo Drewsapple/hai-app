@@ -10,7 +10,6 @@ import {
 } from '@hai-on-op/sdk'
 
 import type { IAuction, AuctionEventType, LoadingAuctionsData } from '~/types/auctions'
-import { COLLATERAL_BATCH_SIZE, DEBT_BATCH_SIZE, SURPLUS_BATCH_SIZE } from '~/utils/constants'
 import { type StoreModel } from './index'
 
 export interface AuctionModel {

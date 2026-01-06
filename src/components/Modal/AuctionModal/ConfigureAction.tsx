@@ -6,7 +6,7 @@ import { utils as gebUtils } from '@hai-on-op/sdk'
 
 import type { IAuction } from '~/types'
 import { Status, formatNumberWithStyle, sanitizeDecimals, toFixedString } from '~/utils'
-import { useStoreActions, useStoreState } from '~/store'
+import { useStoreState } from '~/store'
 import { useAuction } from '~/hooks'
 
 import styled from 'styled-components'
@@ -27,30 +27,37 @@ const DEFAULT_BID_CHANGES = {
 type ConfigureActionProps = {
     auction: IAuction
     action: string
+    amount: string
+    collateralAmount: string
+    setAmount: (value: string) => void
+    setCollateralAmount: (value: string) => void
     nextStep: (skip?: boolean) => void
 }
-export function ConfigureAction({ auction, action, nextStep }: ConfigureActionProps) {
+export function ConfigureAction({
+    auction,
+    action,
+    amount,
+    collateralAmount,
+    setAmount,
+    setCollateralAmount,
+    nextStep,
+}: ConfigureActionProps) {
     const { t } = useTranslation()
+
+    const [error, setError] = useState('')
 
     const {
         auctionModel: {
-            amount,
             auctionsData,
             coinBalances: { hai: haiBalance = '0', kite: kiteBalance = '0' },
-            collateralAmount,
             collateralData,
             internalBalance,
             protInternalBalance,
         },
         connectWalletModel: { coinAllowance: haiAllowance = '0', protAllowance: kiteAllowance = '0' },
     } = useStoreState((state) => state)
-    const { auctionModel: auctionActions } = useStoreActions((actions) => actions)
 
     const { buyToken, sellToken, remainingToSell } = useAuction(auction)
-
-    const [error, setError] = useState('')
-    // const [value, setValue] = useState('')
-    // const [collateralValue, setCollateralValue] = useState('')
 
     const [bidIncrease, bidDecrease] = useMemo(() => {
         return !auctionsData
@@ -83,31 +90,27 @@ export function ConfigureAction({ auction, action, nextStep }: ConfigureActionPr
     const handleAmountChange = useCallback(
         (val: string) => {
             setError('')
-            // setValue(val)
-            auctionActions.setAmount(val)
+            setAmount(val)
             const valBN = parseEther(val || '0')
             const colValueBN = valBN.mul(collateralPrice.raw).div(constants.WeiPerEther)
             const colValueBNDecimalsRemoved = gebUtils.decimalShift(gebUtils.decimalShift(colValueBN, -8), 8)
 
             const formatted = formatEther(colValueBNDecimalsRemoved.toString())
-            // setCollateralValue(formatted)
-            auctionActions.setCollateralAmount(formatted)
+            setCollateralAmount(formatted)
         },
-        [collateralPrice.raw, auctionActions]
+        [collateralPrice.raw]
     )
 
     const handleCollateralAmountChange = useCallback(
         (amount: string) => {
             setError('')
-            // setCollateralValue(amount)
-            auctionActions.setCollateralAmount(amount)
+            setCollateralAmount(amount)
 
             const value = (Number(amount) / Number(collateralPrice.formatted)).toString() || ''
             const sanitizedValue = sanitizeDecimals(value, 18)
-            // setValue(sanitizedValue)
-            auctionActions.setAmount(sanitizedValue)
+            setAmount(sanitizedValue)
         },
-        [collateralPrice.formatted, auctionActions]
+        [collateralPrice.formatted]
     )
 
     const maxBid = useMemo(() => {
@@ -284,10 +287,10 @@ export function ConfigureAction({ auction, action, nextStep }: ConfigureActionPr
             return
         }
         if (auction.englishAuctionType !== 'DEBT') {
-            auctionActions.setAmount(protInternalBalance)
+            setAmount(protInternalBalance)
         }
         nextStep(true)
-    }, [action, auctionActions, nextStep, passesChecks, hasAllowance, auction.englishAuctionType, protInternalBalance])
+    }, [action, nextStep, passesChecks, hasAllowance, auction.englishAuctionType, protInternalBalance, setAmount])
 
     const claimValues = useMemo(() => {
         return Number(protInternalBalance) > Number(internalBalance)

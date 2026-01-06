@@ -22,8 +22,10 @@ enum ActionType {
 
 type ConfirmProps = {
     previousStep: () => void
+    amount: string
+    collateralAmount: string
 }
-export function Confirm({ previousStep }: ConfirmProps) {
+export function Confirm({ previousStep, amount, collateralAmount }: ConfirmProps) {
     const { t } = useTranslation()
     const { address: account } = useAccount()
     const signer = useEthersSigner()
@@ -35,7 +37,7 @@ export function Confirm({ previousStep }: ConfirmProps) {
             auctionOperationPayload: { type },
         },
     } = useStoreState((state) => state)
-    const { auctionModel: auctionActions, popupsModel: popupsActions } = useStoreActions((actions) => actions)
+    const { popupsModel: popupsActions } = useStoreActions((actions) => actions)
 
     const { activeAuctions } = useClaims()
 
@@ -94,8 +96,6 @@ export function Confirm({ previousStep }: ConfirmProps) {
                 }
             default: {
                 const {
-                    amount,
-                    collateralAmount,
                     selectedAuction: { englishAuctionType, buyToken, buyInitialAmount, sellToken, sellInitialAmount },
                 } = auctionState
                 switch (englishAuctionType) {
@@ -130,7 +130,7 @@ export function Confirm({ previousStep }: ConfirmProps) {
                 }
             }
         }
-    }, [auctionState, actionType])
+    }, [auctionState, actionType, amount, collateralAmount])
 
     const handleConfirm = async () => {
         if (!account || !signer || !auctionState.selectedAuction) return
@@ -147,8 +147,6 @@ export function Confirm({ previousStep }: ConfirmProps) {
 
             const {
                 selectedAuction: { auctionId, englishAuctionType: auctionType, sellToken },
-                amount,
-                collateralAmount,
                 internalBalance,
                 protInternalBalance,
             } = auctionState
@@ -198,19 +196,6 @@ export function Confirm({ previousStep }: ConfirmProps) {
             }
             setStatus(ActionState.SUCCESS)
             // refetch auction status async
-            auctionActions.fetchAuctions({
-                geb,
-                type: 'COLLATERAL',
-                tokenSymbol: auctionState.selectedAuction.sellToken,
-            })
-            auctionActions.fetchAuctions({
-                geb,
-                type: 'DEBT',
-            })
-            auctionActions.fetchAuctions({
-                geb,
-                type: 'SURPLUS',
-            })
             activeAuctions.refetch()
             await wait(3000)
             popupsActions.setAuctionOperationPayload({
